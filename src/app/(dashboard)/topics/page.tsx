@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation';
 import { TopicsDirectoryClient } from '@/features/topics/topics-directory-client';
 import { createClient, getAuthenticatedClaims } from '@/lib/supabase/server';
 import { listTopics } from '@/services/topics.service';
-import { fetchWorkspaceBootstrap } from '@/services/workspace.service';
 
 export const metadata: Metadata = {
   title: 'Topics',
@@ -22,15 +21,16 @@ export default async function TopicsPage({
     sp.status === 'archived' ? 'archived' : sp.status === 'all' ? 'all' : 'active';
 
   const supabase = await createClient();
-  const [bootstrap, topics] = await Promise.all([
-    fetchWorkspaceBootstrap(supabase, claims.userId, claims.email ?? ''),
+  const [profileResult, topics] = await Promise.all([
+    supabase.from('profiles').select('timezone').eq('id', claims.userId).maybeSingle(),
     listTopics(supabase, claims.userId),
   ]);
+  if (profileResult.error) throw profileResult.error;
 
   return (
     <TopicsDirectoryClient
       userId={claims.userId}
-      timezone={bootstrap.profile?.timezone ?? 'UTC'}
+      timezone={profileResult.data?.timezone ?? 'UTC'}
       initialTopics={topics}
       initialStatusFilter={initialStatus}
     />

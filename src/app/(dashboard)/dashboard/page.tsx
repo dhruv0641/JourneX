@@ -4,7 +4,6 @@ import { TodayWorkspace } from '@/features/dashboard/today-workspace';
 import { getLocalDateKey } from '@/lib/utilities/dates';
 import { createClient, getAuthenticatedClaims, getAuthenticatedUser } from '@/lib/supabase/server';
 import { fetchGlobalDashboardSummary } from '@/services/modules.service';
-import { fetchWorkspaceBootstrap } from '@/services/workspace.service';
 
 export const metadata: Metadata = {
   title: 'Today',
@@ -18,8 +17,13 @@ export default async function DashboardPage() {
   let summary;
   try {
     const supabase = await createClient();
-    const bootstrap = await fetchWorkspaceBootstrap(supabase, claims.userId, claims.email ?? '');
-    timezone = bootstrap.profile?.timezone ?? 'UTC';
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('timezone')
+      .eq('id', claims.userId)
+      .maybeSingle();
+    if (error) throw error;
+    timezone = profile?.timezone ?? 'UTC';
     summary = await fetchGlobalDashboardSummary(supabase, 7, timezone);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

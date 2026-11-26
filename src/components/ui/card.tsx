@@ -4,7 +4,10 @@ import { cn } from '@/lib/utilities/cn';
 export function Card({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
-      className={cn('min-w-0 rounded-2xl border border-border bg-card shadow-[0_3px_12px_-8px_color-mix(in_srgb,var(--foreground)_22%,transparent)] text-card-foreground', className)}
+      className={cn(
+        'workspace-glass-card min-w-0 rounded-2xl border border-border bg-card shadow-[0_3px_12px_-8px_color-mix(in_srgb,var(--foreground)_22%,transparent)] text-card-foreground',
+        className,
+      )}
       {...props}
     />
   );

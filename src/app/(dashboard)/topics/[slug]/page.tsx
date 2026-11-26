@@ -4,7 +4,6 @@ import { TopicWorkspaceClient } from '@/features/topics/topic-workspace-client';
 import { createClient, getAuthenticatedClaims } from '@/lib/supabase/server';
 import { fetchTopicAnalyticsSummary } from '@/services/modules.service';
 import { fetchTopicDetailBySlug } from '@/services/topics.service';
-import { fetchWorkspaceBootstrap } from '@/services/workspace.service';
 
 export async function generateMetadata({
   params,
@@ -33,14 +32,15 @@ export default async function TopicDetailPage({
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
   const supabase = await createClient();
 
-  const [bootstrap, bundle] = await Promise.all([
-    fetchWorkspaceBootstrap(supabase, claims.userId, claims.email ?? ''),
+  const [profileResult, bundle] = await Promise.all([
+    supabase.from('profiles').select('timezone').eq('id', claims.userId).maybeSingle(),
     fetchTopicDetailBySlug(supabase, claims.userId, slug),
   ]);
+  if (profileResult.error) throw profileResult.error;
 
   if (!bundle) notFound();
 
-  const timezone = bootstrap.profile?.timezone ?? 'UTC';
+  const timezone = profileResult.data?.timezone ?? 'UTC';
   const analytics = await fetchTopicAnalyticsSummary(supabase, bundle.topic.id, 30, timezone);
 
   return (

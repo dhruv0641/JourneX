@@ -243,7 +243,7 @@ export function AppShell({
         {/* Desktop Sidebar */}
         <aside
           className={cn(
-            'hidden shrink-0 border-r border-border bg-muted/55 motion-safe:transition-[width] duration-200 lg:block',
+            'workspace-glass-sidebar hidden shrink-0 border-r border-border motion-safe:transition-[width] duration-200 lg:block',
             sidebarCollapsed ? 'w-[68px]' : 'w-[226px]',
           )}
         >
@@ -255,14 +255,14 @@ export function AppShell({
           side="left"
           title={appName}
           description="Jump to a topic or create a new one."
-          className="flex flex-col gap-0 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-left-8 motion-safe:duration-200"
+          className="workspace-glass-drawer flex flex-col gap-0 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:slide-in-from-left-8 motion-safe:duration-200"
         >
           {renderSidebarContent(false, true)}
         </SheetContent>
 
         {/* Main Content Area */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur-sm">
+          <header className="workspace-glass-header sticky top-0 z-30 border-b border-border">
             <div className="flex min-h-16 flex-wrap items-center gap-1 px-3 py-1.5 sm:flex-nowrap sm:justify-between sm:gap-2 sm:px-6">
               <div className="mr-auto flex min-w-0 flex-1 items-center gap-1.5">
                 <SheetTrigger asChild>

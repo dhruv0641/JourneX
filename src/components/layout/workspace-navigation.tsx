@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useLinkStatus } from 'next/link';
 import { Activity, ChartNoAxesColumn, Layers, Plus, Sunrise } from 'lucide-react';
 import { cn } from '@/lib/utilities/cn';
 
@@ -9,6 +10,11 @@ const destinations = [
   { href: '/activity', label: 'Activity', icon: Activity },
   { href: '/review', label: 'Review', icon: ChartNoAxesColumn },
 ];
+
+function NavigationPending() {
+  const { pending } = useLinkStatus();
+  return pending ? <span className="nav-pending" aria-label="Loading" /> : null;
+}
 
 export function WorkspaceNavigation({
   pathname,
@@ -49,6 +55,7 @@ export function WorkspaceNavigation({
                 <Icon size={19} aria-hidden="true" />
               </span>
               {(mobile || !collapsed) && <span>{label}</span>}
+              <NavigationPending />
             </Link>
           );
         })}
