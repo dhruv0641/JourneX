@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
   DndContext,
@@ -38,7 +37,7 @@ import {
   SlidersHorizontal,
   Star,
 } from 'lucide-react';
-import { EmptyState, Skeleton } from '@/components/shared/state-views';
+import { EmptyState } from '@/components/shared/state-views';
 import { TopicIcon } from '@/components/shared/topic-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,10 +52,7 @@ import {
 import { useUiStore } from '@/stores/ui-store';
 import type { DashboardWidgetRow, GlobalDashboardSummary, TopicSummaryItem } from '@/types/domain';
 
-const AnalyticsChartCard = dynamic(
-  () => import('@/components/charts/analytics-charts').then((m) => m.AnalyticsChartCard),
-  { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> },
-);
+import { AnalyticsChartCard } from '@/components/charts/analytics-charts';
 
 interface WidgetPref {
   id: string;

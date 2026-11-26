@@ -61,12 +61,33 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     page,
   }) => {
     test.setTimeout(180_000);
+    const pageErrors: string[] = [];
+    const consoleErrors: string[] = [];
+    const serverErrors: string[] = [];
+    page.on('pageerror', (err) => pageErrors.push(err.message));
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+    page.on('response', (res) => {
+      if (res.status() >= 500) {
+        serverErrors.push(`${res.status()} ${res.url()}`);
+      }
+    });
+
+    // 0. Public Landing Page + WCAG Accessibility + Desktop Screenshot
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'landing-light-1440.png') });
+    const landingAxe = await new AxeBuilder({ page }).analyze();
+    expect(landingAxe.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')).toEqual([]);
 
     // 1. Login & Session Persistence + Verify registration page renders cleanly
     await page.goto('/register');
     await expect(page.getByRole('heading', { name: /Create your workspace/i })).toBeVisible();
 
-    await page.goto('/login');
+    await page.goto('/login', { waitUntil: 'networkidle' });
     await page.getByLabel('Email address').fill(email);
     await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Sign in' }).click();
@@ -75,13 +96,13 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
 
     // Capture Light Dashboard Screenshot (Desktop 1440)
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard-light-1440.png') });
 
-    // Accessibility check on Dashboard
-    const dashAxe = await new AxeBuilder({ page })
-      .disableRules(['color-contrast'])
-      .analyze();
-    expect(dashAxe.violations.filter((v) => v.impact === 'critical')).toEqual([]);
+    // Accessibility check on Dashboard (full WCAG rules)
+    const dashAxe = await new AxeBuilder({ page }).analyze();
+    expect(dashAxe.violations.filter((v) => v.impact === 'critical' || v.impact === 'serious')).toEqual([]);
 
     // 2. Create a Blank Topic
     await page.goto('/topics/new');
@@ -121,69 +142,71 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
       ['Cambridge Test 18 Reading', '8.0', '60'],
       ['Cambridge Test 18 Listening', '8.5', '40'],
     ]) {
-      await page.getByRole('button', { name: 'Add Entry' }).click();
+      await page.getByRole('button', { name: 'Add Entry' }).first().click();
       await page.getByLabel('Summary / Title').fill(title!);
       await page.getByLabel(/Skill/i).selectOption(title!.includes('Reading') ? 'Reading' : 'Listening');
       await page.getByLabel(/Band Score/i).fill(score!);
       await page.getByLabel(/Duration \(min\)/i).fill(mins!);
       await page.getByRole('button', { name: 'Save Entry' }).click();
-      await expect(page.getByText(title!)).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByText(title!).first()).toBeVisible({ timeout: 10_000 });
     }
 
     // 5. Log Time Session and Verify Totals
     await page.getByRole('tab', { name: /Study Timer/i }).click();
-    await page.getByLabel('Session Description').fill('IELTS Writing Task 2 Drill');
+    await page.getByLabel('Session Description', { exact: true }).fill('IELTS Writing Task 2 Drill');
     await page.getByLabel('Duration (minutes)').fill('45');
     await page.getByRole('button', { name: 'Save Time Entry' }).click();
-    await expect(page.getByText('IELTS Writing Task 2 Drill')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('IELTS Writing Task 2 Drill').first()).toBeVisible({ timeout: 10_000 });
 
     // 6. Create and Complete Tasks
     await page.getByRole('tab', { name: /Study Tasks/i }).click();
     await page.getByPlaceholder('Add task or deliverable…').fill('Complete Speaking Cue Cards');
     await page.getByRole('button', { name: 'Add Task' }).click();
-    await expect(page.getByText('Complete Speaking Cue Cards')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Complete Speaking Cue Cards').first()).toBeVisible({ timeout: 10_000 });
     await page.getByRole('button', { name: 'Complete task' }).first().click();
 
     // 7. Create Journal Entry
     await page.getByRole('tab', { name: /Study Reflection/i }).click();
-    await page.getByLabel('Title').fill('Day 1 Mock Analysis');
+    await page.getByLabel('Title', { exact: true }).fill('Day 1 Mock Analysis');
     await page.getByRole('textbox', { name: 'Journal rich text editor' }).fill('Improved skimming speed in passage 3.');
     await page.getByRole('button', { name: 'Publish Entry' }).click();
-    await expect(page.getByText('Day 1 Mock Analysis')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Day 1 Mock Analysis').first()).toBeVisible({ timeout: 10_000 });
 
     // 8 & 9. Calculator & Save Calculation History
     await page.getByRole('tab', { name: /IELTS Band Calculator/i }).click();
     await page.getByLabel(/Calculation Label/i).fill('Target Check #1');
     await page.getByRole('button', { name: /Save Calculation to History/i }).click();
-    await expect(page.getByText('Target Check #1')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Target Check #1').first()).toBeVisible({ timeout: 10_000 });
 
     // 10 & 11. Modify Topic Configuration & Verify Persistence After Refresh
     await page.getByRole('tab', { name: 'Configure' }).click();
     await page.getByPlaceholder('Custom module title…').fill('Daily Study Habits');
     await page.getByLabel('Choose module type').selectOption('habits');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(page.getByText('Daily Study Habits')).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByText('Daily Study Habits').first()).toBeVisible({ timeout: 10_000 });
 
     await page.reload();
     await expect(page.getByRole('tab', { name: /Daily Study Habits/i })).toBeVisible({ timeout: 10_000 });
 
     // Verify Overview Analytics reflects real data
     await page.getByRole('tab', { name: 'Overview' }).click();
-    await expect(page.getByText('1 / 1')).toBeVisible(); // 1/1 completed task
-    await expect(page.getByText('45m 00s')).toBeVisible(); // 45m focus time
+    await expect(page.getByText('1 / 1').first()).toBeVisible(); // 1/1 completed task
+    await expect(page.getByText('45m 00s').first()).toBeVisible(); // 45m focus time
 
     // Screenshot Topic Workspace Light
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'topic-ielts-light-1440.png') });
 
     // 12. Verify Synchronization Across Browser Contexts
     const secondContext = await browser.newContext();
     const secondPage = await secondContext.newPage();
-    await secondPage.goto('/login');
+    await secondPage.goto('/login', { waitUntil: 'networkidle' });
     await secondPage.getByLabel('Email address').fill(email);
     await secondPage.getByLabel('Password', { exact: true }).fill(password);
     await secondPage.getByRole('button', { name: 'Sign in' }).click();
     await secondPage.waitForURL('**/dashboard', { timeout: 20_000 });
-    await expect(secondPage.getByText('IELTS Academic 2026')).toBeVisible({ timeout: 10_000 });
+    await expect(secondPage.getByText('IELTS Academic 2026').first()).toBeVisible({ timeout: 10_000 });
     await secondContext.close();
 
     // 13. Export User Data & Switch to Dark Mode
@@ -196,14 +219,19 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     const exportedJson = JSON.parse(fs.readFileSync(downloadPath!, 'utf8'));
     expect(exportedJson.topics.length).toBeGreaterThanOrEqual(2);
 
-    // Toggle Dark Mode & capture dark dashboard
+    // Toggle Dark Mode & capture dark settings + dark dashboard
     await page.getByLabel(/Switch theme/i).click(); // light -> dark (or cycle until .dark class present)
     for (let i = 0; i < 3; i += 1) {
       const isDark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
       if (isDark) break;
       await page.getByLabel(/Switch theme/i).click();
     }
+    await page.waitForTimeout(300);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'settings-dark-1440.png') });
+
     await page.goto('/dashboard');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard-dark-1440.png') });
 
     // 14. Archive and Restore Topic
@@ -226,8 +254,14 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
         await expect(page.getByRole('navigation', { name: 'Mobile navigation' })).toBeVisible();
       }
       if (vp.width === 390) {
+        await page.waitForLoadState('networkidle');
+        await page.waitForTimeout(400);
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard-dark-mobile-390.png') });
       }
     }
+
+    expect(pageErrors).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+    expect(serverErrors).toEqual([]);
   });
 });

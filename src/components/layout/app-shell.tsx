@@ -415,12 +415,17 @@ export function AppShell({
                 variant="outline"
                 size="sm"
                 onClick={() => setCommandPaletteOpen(true)}
-                aria-label="Open global search and command palette"
                 className="min-h-10 gap-2 px-2.5 sm:px-3"
               >
                 <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-                <span className="hidden text-muted-foreground sm:inline">Search…</span>
-                <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline-block">
+                <span className="sr-only sm:hidden">Search</span>
+                <span className="hidden text-muted-foreground sm:inline">
+                  Search<span aria-hidden="true">…</span>
+                </span>
+                <kbd
+                  aria-hidden="true"
+                  className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground lg:inline-block"
+                >
                   ⌘K
                 </kbd>
               </Button>

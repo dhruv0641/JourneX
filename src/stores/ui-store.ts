@@ -38,13 +38,17 @@ export const useUiStore = create<UiState>()(
       setMobileSheetOpen: (open) => set({ mobileSheetOpen: open }),
       setQuickCreateOpen: (open) => set({ quickCreateOpen: open }),
       setOffline: (offline) => set({ isOffline: offline }),
-      pushToast: (toast) =>
+      pushToast: (toast) => {
+        const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
         set((s) => ({
-          toasts: [
-            ...s.toasts.slice(-3),
-            { ...toast, id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}` },
-          ],
-        })),
+          toasts: [...s.toasts.slice(-3), { ...toast, id }],
+        }));
+        if (typeof window !== 'undefined') {
+          window.setTimeout(() => {
+            useUiStore.getState().dismissToast(id);
+          }, 4000);
+        }
+      },
       dismissToast: (id) =>
         set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
     }),

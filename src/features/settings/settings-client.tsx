@@ -204,7 +204,7 @@ export function SettingsClient({
           <CardHeader>
             <CardTitle>Operating System Preferences</CardTitle>
             <CardDescription>
-              Saved persistently in PostgreSQL (`user_preferences` &amp; `profiles`).
+              Saved persistently in your PostgreSQL workspace profile and preferences.
             </CardDescription>
           </CardHeader>
           <CardContent>

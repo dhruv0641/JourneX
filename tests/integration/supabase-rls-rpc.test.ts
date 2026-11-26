@@ -202,6 +202,63 @@ describe.skipIf(!hasEnv)('Supabase RLS, Auth, Atomic RPCs, OCC & Storage Isolati
     expect(stopErr).toBeNull();
     expect(stopped?.status).toBe('completed');
 
+    // Parallel competing optimistic concurrency race on topics (version = 2 -> 3)
+    const [race1, race2] = await Promise.all([
+      clientA
+        .from('topics')
+        .update({ description: 'Winner 1', version: 3 })
+        .eq('id', created.topic.id)
+        .eq('version', 2)
+        .select(),
+      clientA
+        .from('topics')
+        .update({ description: 'Winner 2', version: 3 })
+        .eq('id', created.topic.id)
+        .eq('version', 2)
+        .select(),
+    ]);
+    const winnerCount = (race1.data?.length ?? 0) + (race2.data?.length ?? 0);
+    expect(winnerCount).toBe(1);
+
+    // Duplicate habit check-in prevention (same habit_id + same checkin_date)
+    const { data: habitMod, error: habitModErr } = await clientA
+      .from('topic_modules')
+      .insert({
+        user_id: userAId,
+        topic_id: created.topic.id,
+        feature_key: 'habits',
+        module_key: 'daily_habits',
+        name: 'Daily Habits',
+      })
+      .select()
+      .single();
+    expect(habitModErr).toBeNull();
+    const { data: habitRow, error: habitErr } = await clientA
+      .from('habits')
+      .insert({
+        user_id: userAId,
+        topic_id: created.topic.id,
+        module_id: habitMod!.id,
+        title: '25m Vocabulary Drill',
+      })
+      .select()
+      .single();
+    expect(habitErr).toBeNull();
+    const { error: firstCheckinErr } = await clientA.from('habit_checkins').insert({
+      user_id: userAId,
+      topic_id: created.topic.id,
+      habit_id: habitRow!.id,
+      checkin_date: '2026-11-26',
+    });
+    expect(firstCheckinErr).toBeNull();
+    const { error: dupCheckinErr } = await clientA.from('habit_checkins').insert({
+      user_id: userAId,
+      topic_id: created.topic.id,
+      habit_id: habitRow!.id,
+      checkin_date: '2026-11-26',
+    });
+    expect(dupCheckinErr).not.toBeNull();
+
     // Global summary reflects real topic & completed session
     const { data: globalSummary, error: summaryErr } = await clientA.rpc('get_global_dashboard_summary', {
       p_days: 30,

@@ -117,12 +117,13 @@ export function JournalModule({
     setSaving(true);
     setConflictMsg(null);
     try {
+      const currentHtml = editorRef.current?.innerHTML ?? htmlBody;
       const saved = await saveJournalEntry(createClient(), userId, {
         id: editingId,
         topic_id: topicId,
         module_id: mod.id,
         title: title.trim() || `Entry ${entryDate}`,
-        content_html: htmlBody,
+        content_html: currentHtml,
         category,
         mood: cfg.enableMood !== false ? mood : null,
         entry_date: entryDate,

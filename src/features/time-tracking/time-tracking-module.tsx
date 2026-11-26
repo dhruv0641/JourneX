@@ -215,7 +215,7 @@ export function TimeTrackingModule({
             ) : (
               <div className="flex gap-2">
                 <Input
-                  aria-label="Session description"
+                  aria-label="Live session description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What are you focusing on?…"

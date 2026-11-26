@@ -117,13 +117,13 @@ export function ToastViewport() {
   return (
     <div
       aria-live="polite"
-      className="fixed bottom-20 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 md:bottom-4"
+      className="pointer-events-none fixed right-4 top-16 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"
     >
       {toasts.map((toast) => (
         <div
           key={toast.id}
           className={cn(
-            'flex items-start justify-between gap-2 rounded-lg border bg-card p-3.5 shadow-lg',
+            'pointer-events-auto flex items-start justify-between gap-2 rounded-lg border bg-card p-3.5 shadow-lg',
             toast.kind === 'error'
               ? 'border-destructive/50'
               : toast.kind === 'warning'

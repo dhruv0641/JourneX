@@ -184,44 +184,91 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
     const matchedTemplate = templates.find(
       (t) => t.slug === discovery.recommendedTemplateSlug,
     );
-    if (matchedTemplate && discovery.confidence !== 'low') {
-      setSelectedTemplateId(matchedTemplate.id);
+    const activeTemplate =
+      selectedTemplate && selectedTemplate.slug !== 'blank-topic'
+        ? selectedTemplate
+        : matchedTemplate && discovery.confidence !== 'low'
+          ? matchedTemplate
+          : undefined;
+
+    if (activeTemplate && !selectedTemplateId) {
+      setSelectedTemplateId(activeTemplate.id);
     }
 
-    const builtModules: CreateTopicModuleInput[] = discovery.recommendedModules.map(
-      (fkey, idx) => {
-        const reg = FEATURE_REGISTRY[fkey];
-        const recFields = discovery.recommendedFields[fkey] ?? [];
-        const config: Record<string, unknown> = { ...reg.defaultConfig };
-        if (fkey === 'calculators' && discovery.suggestedCalculator) {
-          config.calculator = discovery.suggestedCalculator;
-        } else if (fkey === 'calculators') {
-          config.calculator = {
-            name: DEFAULT_CALC_DRAFT.name,
-            description: DEFAULT_CALC_DRAFT.description,
-            inputs_schema: DEFAULT_CALC_DRAFT.inputs,
-            outputs_schema: DEFAULT_CALC_DRAFT.outputs,
-            formulas: DEFAULT_CALC_DRAFT.formulas,
-          };
+    const templateDef = activeTemplate?.definition as
+      | {
+          modules?: CreateTopicModuleInput[];
+          views?: Array<{ view_type: ViewType; name: string; is_default: boolean }>;
         }
-        return {
-          feature_key: fkey,
-          module_key: fkey,
-          name: reg.name,
-          icon: reg.icon,
-          sort_order: idx,
-          config,
-          fields: recFields,
-        };
-      },
+      | undefined;
+    const templateModules = Array.isArray(templateDef?.modules) ? templateDef.modules : [];
+
+    const mergedKeys = Array.from(
+      new Set<FeatureKey>([
+        ...modules.map((m) => m.feature_key),
+        ...discovery.recommendedModules,
+      ]),
     );
 
+    const builtModules: CreateTopicModuleInput[] = mergedKeys.map((fkey, idx) => {
+      const existingMod = modules.find((m) => m.feature_key === fkey);
+      const tplMod = templateModules.find((m) => m.feature_key === fkey);
+      const reg = FEATURE_REGISTRY[fkey];
+
+      if (
+        existingMod &&
+        (existingMod.fields?.length || Object.keys(existingMod.config ?? {}).length || activeTemplate)
+      ) {
+        return { ...existingMod, sort_order: idx };
+      }
+
+      if (tplMod) {
+        return {
+          ...tplMod,
+          sort_order: idx,
+          config: tplMod.config ?? { ...reg.defaultConfig },
+          fields: tplMod.fields ?? [],
+        };
+      }
+
+      const recFields = discovery.recommendedFields[fkey] ?? [];
+      const config: Record<string, unknown> = { ...reg.defaultConfig };
+      if (fkey === 'calculators' && discovery.suggestedCalculator) {
+        config.calculator = discovery.suggestedCalculator;
+      } else if (fkey === 'calculators') {
+        config.calculator = {
+          name: DEFAULT_CALC_DRAFT.name,
+          description: DEFAULT_CALC_DRAFT.description,
+          inputs_schema: DEFAULT_CALC_DRAFT.inputs,
+          outputs_schema: DEFAULT_CALC_DRAFT.outputs,
+          formulas: DEFAULT_CALC_DRAFT.formulas,
+        };
+      }
+      return {
+        feature_key: fkey,
+        module_key: fkey,
+        name: reg.name,
+        icon: reg.icon,
+        sort_order: idx,
+        config,
+        fields: recFields,
+      };
+    });
+
     setModules(builtModules);
-    setViews(discovery.recommendedViews);
+    if (Array.isArray(templateDef?.views) && templateDef.views.length > 0) {
+      setViews(templateDef.views);
+    } else {
+      setViews(discovery.recommendedViews);
+    }
     pushToast({
       kind: 'info',
       title: 'Recommendations applied',
-      description: `Configured ${builtModules.length} modules and ${discovery.recommendedViews.length} views.`,
+      description: `Configured ${builtModules.length} modules and ${
+        Array.isArray(templateDef?.views) && templateDef.views.length > 0
+          ? templateDef.views.length
+          : discovery.recommendedViews.length
+      } views.`,
     });
   }
 
