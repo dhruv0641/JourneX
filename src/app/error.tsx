@@ -7,14 +7,22 @@ import { Button, buttonVariants } from '@/components/ui/button';
 
 export default function GlobalRouteError({
   error,
+  retry,
   reset,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry?: () => void;
+  reset?: () => void;
 }) {
   useEffect(() => {
-    console.error('Route error boundary caught:', error.digest ?? error.message);
+    console.error('Route error boundary caught:', error?.digest ?? error?.message ?? 'unknown');
   }, [error]);
+
+  const handleRetry = () => {
+    if (typeof retry === 'function') retry();
+    else if (typeof reset === 'function') reset();
+    else window.location.reload();
+  };
 
   return (
     <main
@@ -30,11 +38,11 @@ export default function GlobalRouteError({
           Unable to finish loading this page. Check your connection or environment configuration and
           try again.
         </p>
-        {error.digest ? (
+        {error?.digest ? (
           <p className="mt-2 font-mono text-xs text-muted-foreground">Ref: {error.digest}</p>
         ) : null}
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <Button onClick={reset}>
+          <Button onClick={handleRetry}>
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Try again
           </Button>

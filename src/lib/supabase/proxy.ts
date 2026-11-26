@@ -44,16 +44,23 @@ export async function updateSession(request: NextRequest) {
         cookiesToSet.forEach(({ name, value, options }) =>
           supabaseResponse.cookies.set(name, value, options),
         );
-        Object.entries(headers).forEach(([headerName, headerValue]) =>
-          supabaseResponse.headers.set(headerName, headerValue),
-        );
+        if (headers) {
+          Object.entries(headers).forEach(([headerName, headerValue]) =>
+            supabaseResponse.headers.set(headerName, headerValue),
+          );
+        }
       },
     },
   });
 
   // Always call getClaims() immediately after creating the client to validate & refresh tokens.
-  const { data } = await supabase.auth.getClaims();
-  const userClaims = data?.claims;
+  let userClaims: unknown = null;
+  try {
+    const { data } = await supabase.auth.getClaims();
+    userClaims = data?.claims ?? null;
+  } catch {
+    userClaims = null;
+  }
 
   const pathname = request.nextUrl.pathname;
   const isApiRoute = pathname.startsWith('/api/');
