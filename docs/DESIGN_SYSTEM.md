@@ -1,4 +1,4 @@
-# Design System — NEXORA Enterprise UI/UX Specification
+# Design System — JournalX Enterprise UI/UX Specification
 
 Generated and synthesized using `.agents/skills/ui-ux-pro-max/`, `.agents/skills/ui-styling/`, and `.agents/skills/web-design-guidelines/`.
 

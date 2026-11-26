@@ -1,6 +1,6 @@
-# User Guide — NEXORA Personal Operating System
+# User Guide — JournalX Personal Operating System
 
-Welcome to **NEXORA**, a configurable modular operating system where you design independent mini-applications ("Topics") for any domain—exam prep, software engineering, personal finance, habits, fitness, research, or project management.
+Welcome to **JournalX**, a configurable modular operating system where you design independent mini-applications ("Topics") for any domain—exam prep, software engineering, personal finance, habits, fitness, research, or project management.
 
 ---
 
@@ -10,7 +10,7 @@ Welcome to **NEXORA**, a configurable modular operating system where you design 
    - Sign up with your name, email, and an 8+ character password.
    - If your email requires verification, click the link sent to your inbox—you will be signed in and redirected automatically to `/dashboard`.
 2. **Customize Brand Name, Theme & Timezone (`/settings`):**
-   - Rename **Application Name** from `NEXORA` to anything personal (e.g., `DhruvOS`, `StudioCore`). It updates across headers, titles, and navigation immediately.
+   - Rename **Application Name** from `JournalX` to anything personal (e.g., `DhruvOS`, `StudioCore`). It updates across headers, titles, and navigation immediately.
    - Set your **Timezone**, **Time Format** (`24-hour` or `12-hour`), **Theme** (`Light`, `Dark`, or `System`), and default analytics window.
 
 ---
@@ -66,5 +66,5 @@ Build a new topic mini-app in 6 guided steps:
 ## 6. Installing as a Mobile / Desktop App (PWA)
 
 On Chrome/Edge desktop or iOS/Android mobile browsers (over HTTPS production hosting):
-- Select **Install NEXORA** / **Add to Home Screen** from the browser menu.
+- Select **Install JournalX** / **Add to Home Screen** from the browser menu.
 - Opens in clean **standalone mode** with bottom mobile quick navigation (`Home`, `Topics`, `Create`, `Activity`, `Profile`). If connectivity drops, an offline status notice appears cleanly without allowing stale conflicting writes.

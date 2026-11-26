@@ -24,7 +24,7 @@ const VIEWPORTS = [
   { name: 'desktop-1920', width: 1920, height: 1080 },
 ];
 
-test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
+test.describe.serial('JournalX End-to-End Enterprise Verification', () => {
   const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   const email = `e2e-${unique}@example.com`;
   const password = 'NexoraE2ePassword!2026';

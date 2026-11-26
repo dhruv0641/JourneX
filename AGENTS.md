@@ -1,4 +1,4 @@
-# Agent Orchestration & Engineering Standards (NEXORA / JourneX)
+# Agent Orchestration & Engineering Standards (JournalX / JourneX)
 
 This workspace uses the installed skills in `.agents/skills/` as authoritative engineering references across all development workflows:
 

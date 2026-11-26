@@ -1,6 +1,6 @@
-# Deployment & Operations Runbook — NEXORA (JourneX)
+# Deployment & Operations Runbook — JournalX (JourneX)
 
-This guide covers deploying **NEXORA** cleanly on Vercel (or any Node 22/24 container host) backed exclusively by **Supabase** (PostgreSQL, Auth, Storage, Realtime), while staying within Supabase free-tier limits.
+This guide covers deploying **JournalX** cleanly on Vercel (or any Node 22/24 container host) backed exclusively by **Supabase** (PostgreSQL, Auth, Storage, Realtime), while staying within Supabase free-tier limits.
 
 ---
 
@@ -37,6 +37,7 @@ All schema objects, RLS policies, Storage bucket rules, atomic RPC functions, an
 4. `20261126173004_seed_templates.sql` — 6 idempotent starter templates (`IELTS Preparation`, `Personal Finance`, `AI Engineering Lab`, `Fitness & Training`, `Daily Productivity`, `Blank Modular Topic`).
 5. `20261126173005_fk_covering_indexes.sql` — Covering B-tree indexes for composite foreign keys.
 6. `20261126200001_health_check_rpc.sql` — Safe read-only `public.health_check()` RPC for `/api/health` database connectivity & Supabase keep-alive pings.
+7. `20261126204501_journalx_brand.sql` — Sets default `user_preferences.app_name` to `'JournalX'` and migrates default `'NEXORA'` records while preserving custom user names.
 
 ### Apply Migrations
 

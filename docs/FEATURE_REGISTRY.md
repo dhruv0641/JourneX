@@ -1,6 +1,6 @@
-# Feature Registry — NEXORA Modular Engine
+# Feature Registry — JournalX Modular Engine
 
-The Feature Registry (`src/engine/feature-registry/`) is the single source of truth defining every module capability in NEXORA. The Dynamic Topic Builder, Template Engine, View Router, and Analytics Engine read module definitions from this registry rather than scattering hardcoded conditionals.
+The Feature Registry (`src/engine/feature-registry/`) is the single source of truth defining every module capability in JournalX. The Dynamic Topic Builder, Template Engine, View Router, and Analytics Engine read module definitions from this registry rather than scattering hardcoded conditionals.
 
 ## 1. Registered Feature Catalog
 

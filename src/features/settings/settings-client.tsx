@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Label, NativeSelect } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
+import { DEFAULT_APP_NAME, displayAppName } from '@/lib/utilities/app-name';
 import { createIdempotencyKey } from '@/lib/utilities/csv';
 import { AppConflictError } from '@/lib/validation/common';
 import { exportWorkspaceBundle } from '@/services/modules.service';
@@ -55,7 +56,7 @@ export function SettingsClient({
   const [timezone, setTimezone] = useState(initialProfile?.timezone ?? 'UTC');
   const [profileVersion, setProfileVersion] = useState(initialProfile?.version ?? 1);
 
-  const [appName, setAppName] = useState(initialPreferences?.app_name ?? 'NEXORA');
+  const [appName, setAppName] = useState(displayAppName(initialPreferences?.app_name));
   const [themePref, setThemePref] = useState(initialPreferences?.theme ?? 'system');
   const [timeFormat, setTimeFormat] = useState(initialPreferences?.time_format ?? '24h');
   const [defaultRange, setDefaultRange] = useState(
@@ -86,7 +87,7 @@ export function SettingsClient({
           supabase,
           userId,
           {
-            app_name: appName.trim() || 'NEXORA',
+            app_name: appName.trim() || DEFAULT_APP_NAME,
             theme: themePref,
             time_format: timeFormat,
             default_dashboard_range: defaultRange,

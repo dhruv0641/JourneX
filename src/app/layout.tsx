@@ -19,8 +19,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'NEXORA — Personal Operating System',
-    template: '%s | NEXORA',
+    default: 'JournalX — Personal Operating System',
+    template: '%s | JournalX',
   },
   description:
     'Modular enterprise personal operating system for topics, projects, tasks, journaling, time tracking, calculators, and analytics.',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'NEXORA',
+    title: 'JournalX',
   },
 };
 

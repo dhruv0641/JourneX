@@ -21,8 +21,10 @@ export default async function HomePage() {
           role="status"
           className="border-b border-warning/40 bg-warning/15 px-4 py-2.5 text-center text-xs font-medium text-foreground sm:text-sm"
         >
-          Supabase configuration pending: add <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
-          <code className="font-mono">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> in Vercel Environment Variables and redeploy.
+          Supabase configuration pending: add{' '}
+          <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+          <code className="font-mono">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> in Vercel
+          Environment Variables and redeploy.
         </div>
       ) : null}
       <header className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-2 border-b border-border px-5 sm:px-10">
@@ -33,7 +35,7 @@ export default async function HomePage() {
           <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
             <Layers size={17} aria-hidden="true" />
           </span>
-          NEXORA
+          JournalX
         </span>
         <nav aria-label="Account">
           <Link

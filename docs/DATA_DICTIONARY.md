@@ -1,4 +1,4 @@
-# Data Dictionary — NEXORA PostgreSQL Schema
+# Data Dictionary — JournalX PostgreSQL Schema
 
 Every table lives in the `public` schema (unless noted), enables/forces RLS, and uses `uuid` primary keys (`gen_random_uuid()`) and `timestamptz` timestamps.
 
@@ -18,7 +18,7 @@ Every table lives in the `public` schema (unless noted), enables/forces RLS, and
 | Column | Type | Constraints | Purpose |
 |---|---|---|---|
 | `user_id` | `uuid` | `PK`, `FK -> auth.users(id) ON DELETE CASCADE` | Owner user ID |
-| `app_name` | `text` | `NOT NULL DEFAULT 'NEXORA' CHECK (char_length(trim(app_name)) BETWEEN 1 AND 40)` | Configurable OS display name |
+| `app_name` | `text` | `NOT NULL DEFAULT 'JournalX' CHECK (char_length(trim(app_name)) BETWEEN 1 AND 40)` | Configurable OS display name |
 | `theme` | `text` | `NOT NULL DEFAULT 'system' CHECK (theme IN ('light','dark','system'))` | Preferred theme |
 | `date_format` | `text` | `NOT NULL DEFAULT 'MMM d, yyyy'` | Date formatting preference |
 | `time_format` | `text` | `NOT NULL DEFAULT '24h' CHECK (time_format IN ('12h','24h'))` | Clock format |

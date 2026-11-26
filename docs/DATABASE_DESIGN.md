@@ -1,4 +1,4 @@
-# Database Design — NEXORA PostgreSQL Architecture
+# Database Design — JournalX PostgreSQL Architecture
 
 ## 1. Design Principles
 

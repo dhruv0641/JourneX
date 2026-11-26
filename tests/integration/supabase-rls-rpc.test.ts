@@ -87,7 +87,7 @@ describe.skipIf(!hasEnv)('Supabase RLS, Auth, Atomic RPCs, OCC & Storage Isolati
       .eq('user_id', userAId)
       .single();
     expect(prefErr).toBeNull();
-    expect(prefs?.app_name).toBe('NEXORA');
+    expect(prefs?.app_name).toBe('JournalX');
   });
 
   it('creates topics atomically with idempotency, prevents cross-user RLS access, and enforces OCC', async () => {

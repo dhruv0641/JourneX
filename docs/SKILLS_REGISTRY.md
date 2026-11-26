@@ -1,6 +1,6 @@
 # Skills Registry
 
-This file records every workspace agent skill installed in `.agents/skills/` for **NEXORA** (`JourneX`), including provenance, commit pinning, inspection checks, and verification status.
+This file records every workspace agent skill installed in `.agents/skills/` for **JournalX** (`JourneX`), including provenance, commit pinning, inspection checks, and verification status.
 
 ## Installed Workspace Skills
 

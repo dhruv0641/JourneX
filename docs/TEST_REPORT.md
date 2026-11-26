@@ -1,4 +1,4 @@
-# Verification & QA Test Report — NEXORA (JourneX)
+# Verification & QA Test Report — JournalX (JourneX)
 
 **Verified Code Commit:** `00b0805`  
 **Supabase Project:** `JourneX` (`czyfvgowomejvjrrancy`, `ap-southeast-2`, Postgres `17.12`)  
@@ -37,7 +37,7 @@
 
 ### 2.2 Live Database, RLS & Concurrency Verification (`tests/integration/supabase-rls-rpc.test.ts` — 3/3 suites passed)
 Executed against live Supabase project `czyfvgowomejvjrrancy` (automatically deleting temporary test users and Storage objects in `afterAll`):
-1. **Trigger Provisioning:** Auth signup automatically creates `profiles` and default `user_preferences` (`app_name = 'NEXORA'`).
+1. **Trigger Provisioning:** Auth signup automatically creates `profiles` and default `user_preferences` (`app_name = 'JournalX'`).
 2. **Idempotent Atomic Creation:** `create_topic_atomic` returns `idempotent_replay: false` on initial call, replays the identical stored payload on repeat call (`idempotent_replay: true` with same `topic.id`), and raises `IDEMPOTENCY_CONFLICT` if reused with a modified topic name.
 3. **Strict Two-User Tenant Isolation (RLS & Composite FKs):** User B receives `[]` on `SELECT`/`UPDATE` against User A's topic and receives a database error when attempting to insert a task referencing User A's `topic_id`/`module_id`.
 4. **Optimistic Concurrency & Race Conditions:**

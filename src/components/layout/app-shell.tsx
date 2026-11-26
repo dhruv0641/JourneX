@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { createClient } from '@/lib/supabase/client';
+import { displayAppName } from '@/lib/utilities/app-name';
 import { cn } from '@/lib/utilities/cn';
 import {
   fetchWorkspaceBootstrap,
@@ -62,7 +63,7 @@ export function AppShell({
     initialData: initialBootstrap,
   });
 
-  const appName = bootstrap.preferences?.app_name?.trim() || 'NEXORA';
+  const appName = displayAppName(bootstrap.preferences?.app_name);
   const activeTopics = bootstrap.topics.filter((t) => t.status === 'active');
   const archivedCount = bootstrap.topics.filter((t) => t.status === 'archived').length;
   const unreadNotifs = bootstrap.notifications.filter((n) => !n.is_read);

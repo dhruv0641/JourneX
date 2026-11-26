@@ -1,8 +1,8 @@
-# NEXORA — Modular Personal Operating System
+# JournalX — Modular Personal Operating System
 
-**NEXORA** is an enterprise-grade, schema-driven modular personal operating system built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS v4**, and **Supabase (PostgreSQL, Auth, Storage, Realtime)**.
+**JournalX** is an enterprise-grade, schema-driven modular personal operating system built with **Next.js 16 (App Router)**, **React 19**, **Tailwind CSS v4**, and **Supabase (PostgreSQL, Auth, Storage, Realtime)**.
 
-Instead of hardcoding vertical trackers, NEXORA lets users compose independent mini-applications ("Topics") from reusable, configurable modules (`tasks`, `time_tracking`, `custom_tables`, `custom_forms`, `expense_tracking`, `calculators`, `journal`, `notes`, `activity_logs`, `goals`, `habits`, `calendar`, `attachments`, `statistics`, `charts`) persisted inside a normalized PostgreSQL schema with row-level tenant isolation.
+Instead of hardcoding vertical trackers, JournalX lets users compose independent mini-applications ("Topics") from reusable, configurable modules (`tasks`, `time_tracking`, `custom_tables`, `custom_forms`, `expense_tracking`, `calculators`, `journal`, `notes`, `activity_logs`, `goals`, `habits`, `calendar`, `attachments`, `statistics`, `charts`) persisted inside a normalized PostgreSQL schema with row-level tenant isolation.
 
 ---
 

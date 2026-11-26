@@ -1,4 +1,4 @@
-// NEXORA Secure Service Worker
+// JournalX Secure Service Worker
 // Caches public static assets and offline shell ONLY.
 // Never caches authenticated API/Supabase responses or private user data.
 

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'NEXORA — Personal Operating System',
-    short_name: 'NEXORA',
+    name: 'JournalX — Personal Operating System',
+    short_name: 'JournalX',
     description:
       'Modular personal operating system for topics, tasks, journaling, calculators, time tracking, and analytics.',
     start_url: '/dashboard',

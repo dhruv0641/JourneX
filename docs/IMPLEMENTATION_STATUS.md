@@ -1,4 +1,4 @@
-# Implementation Status — NEXORA (JourneX)
+# Implementation Status — JournalX (JourneX)
 
 **Repository:** `https://github.com/dhruv0641/JourneX.git`  
 **Supabase Project:** `JourneX` (`czyfvgowomejvjrrancy`, `ap-southeast-2`, Postgres `17.12`)  

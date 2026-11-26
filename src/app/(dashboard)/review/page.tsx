@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { GlobalDashboardClient } from '@/features/dashboard/global-dashboard-client';
 import { createClient, getAuthenticatedClaims } from '@/lib/supabase/server';
+import { displayAppName } from '@/lib/utilities/app-name';
 import {
   fetchGlobalDashboardSummary,
   listGlobalDashboardWidgets,
@@ -31,7 +32,7 @@ export default async function ReviewPage() {
   return (
     <GlobalDashboardClient
       userId={claims.userId}
-      appName={bootstrap.preferences?.app_name ?? 'NEXORA'}
+      appName={displayAppName(bootstrap.preferences?.app_name)}
       timezone={timezone}
       initialDays={initialDays}
       initialSummary={summary}

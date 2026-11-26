@@ -143,7 +143,7 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
 
   const headings: Record<AuthMode, { title: string; subtitle: string; submitLabel: string }> = {
     login: {
-      title: 'Sign in to NEXORA',
+      title: 'Sign in to JournalX',
       subtitle: 'Open your topics and pick up where you left off.',
       submitLabel: 'Sign in',
     },
@@ -338,7 +338,7 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
       <div className="mt-6 border-t border-border pt-4 text-center text-sm text-muted-foreground">
         {mode === 'login' ? (
           <>
-            New to NEXORA?{' '}
+            New to JournalX?{' '}
             <Link
               href="/register"
               className="inline-flex min-h-11 items-center rounded-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"

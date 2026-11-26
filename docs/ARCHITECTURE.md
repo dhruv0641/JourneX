@@ -1,8 +1,8 @@
-# System Architecture — NEXORA Personal Operating System
+# System Architecture — JournalX Personal Operating System
 
 ## 1. Architectural Philosophy
 
-NEXORA is built as a **schema-driven modular monolith** using Next.js (App Router) and Supabase (PostgreSQL, Auth, Storage, Realtime). Instead of hardcoding domain-specific pages or spawning per-topic physical SQL tables, NEXORA pairs a **typed Feature Registry** (`src/engine/feature-registry/`) with a **normalized hybrid relational + validated JSONB schema** in PostgreSQL (`supabase/migrations/`).
+JournalX is built as a **schema-driven modular monolith** using Next.js (App Router) and Supabase (PostgreSQL, Auth, Storage, Realtime). Instead of hardcoding domain-specific pages or spawning per-topic physical SQL tables, JournalX pairs a **typed Feature Registry** (`src/engine/feature-registry/`) with a **normalized hybrid relational + validated JSONB schema** in PostgreSQL (`supabase/migrations/`).
 
 Every topic behaves as an independent mini-application composed from versioned feature modules (`tasks`, `journal`, `activity_logs`, `time_tracking`, `custom_tables`, `calculators`, `goals`, `habits`, `calendar`, `analytics`, `attachments`).
 
@@ -39,7 +39,7 @@ flowchart TD
 3. **Deterministic Topic Discovery (Zero Paid LLM Dependency)**: Step 2 of the Topic Builder uses a deterministic multi-signal intent matcher (keyword/synonym scoring, category priors, template proximity, and conditional follow-up rules) with transparent confidence levels and a generic fallback builder for unrecognized topics.
 4. **AST-Based Formula Parser (Zero `eval()`)**: The custom calculator engine tokenizes and parses expressions into a typed Abstract Syntax Tree (`number`, `identifier`, `unary`, `binary`, `call`, `conditional`), enforces an allowlist of safe mathematical functions, detects circular references, guards against division by zero / `Infinity` / `NaN`, and evaluates monetary quantities with scaled decimal precision.
 5. **Atomic PostgreSQL RPCs for Multi-Entity Writes**: Topic creation (`create_topic_atomic`), topic duplication (`duplicate_topic_atomic`), topic archive/restore, timer transitions (`start_time_session`, `pause_time_session`, `stop_time_session`), and versioned updates execute inside short database transactions with idempotency tracking.
-6. **Configurable Application Brand Name**: Stored per-user in `user_preferences.app_name` (default `NEXORA`), rendered dynamically across shell headers, page titles, and settings without requiring redeployment.
+6. **Configurable Application Brand Name**: Stored per-user in `user_preferences.app_name` (default `JournalX`), rendered dynamically across shell headers, page titles, and settings without requiring redeployment.
 7. **Selective Realtime + Reconnection Refetch**: Client queries subscribe selectively to active topic/global change streams keyed by `user_id`, invalidate affected TanStack Query caches cleanly, and refetch authoritative data on reconnect or visibility recovery.
 
 ## 4. Data Flow Contracts

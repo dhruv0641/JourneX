@@ -1,8 +1,8 @@
 {
-  "name": "nexora",
+  "name": "journalx",
   "version": "1.0.0",
   "private": true,
-  "description": "NEXORA — Enterprise Personal Operating System (JourneX)",
+  "description": "JournalX — Enterprise Personal Operating System",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

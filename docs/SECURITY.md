@@ -1,4 +1,4 @@
-# Security Architecture & Threat Model — NEXORA
+# Security Architecture & Threat Model — JournalX
 
 ## 1. Security Objectives
 

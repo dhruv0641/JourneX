@@ -26,7 +26,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               </span>
               <div>
                 <span className={styles.brand} translate="no">
-                  NEXORA
+                  JournalX
                 </span>
                 <p className={styles.descriptor}>Personal operating system</p>
               </div>
