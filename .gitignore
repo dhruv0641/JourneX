@@ -8,6 +8,8 @@ node_modules/
 out/
 build/
 dist/
+next-env.d.ts
+tsconfig.tsbuildinfo
 
 # Environment variables (keep secrets out of version control)
 .env
