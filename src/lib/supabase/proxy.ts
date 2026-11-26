@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getSupabasePublicConfig } from '@/lib/supabase/env';
 import type { Database } from '@/types/database.types';
 
 const PUBLIC_PATHS = [
@@ -26,14 +27,13 @@ function isPublicPath(pathname: string): boolean {
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const cfg = getSupabasePublicConfig();
 
-  if (!url || !key) {
+  if (!cfg) {
     return supabaseResponse;
   }
 
-  const supabase = createServerClient<Database>(url, key, {
+  const supabase = createServerClient<Database>(cfg.url, cfg.key, {
     cookies: {
       getAll() {
         return request.cookies.getAll();

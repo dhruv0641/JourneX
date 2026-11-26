@@ -1,14 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { getSupabasePublicConfig } from '@/lib/supabase/env';
 import type { Database } from '@/types/database.types';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const cfg = getSupabasePublicConfig();
 
-  if (!url || !key) {
+  if (!cfg) {
     return NextResponse.json(
       {
         status: 'degraded',
@@ -21,7 +21,7 @@ export async function GET() {
   }
 
   try {
-    const supabase = createClient<Database>(url, key, {
+    const supabase = createClient<Database>(cfg.url, cfg.key, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
     const { data, error } = await supabase.rpc('health_check');

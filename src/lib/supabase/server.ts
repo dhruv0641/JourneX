@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
+import { getSupabasePublicConfig } from '@/lib/supabase/env';
 import type { Database } from '@/types/database.types';
 
 /**
@@ -8,14 +9,13 @@ import type { Database } from '@/types/database.types';
  */
 export async function createClient() {
   const cookieStore = await cookies();
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const cfg = getSupabasePublicConfig();
 
-  if (!url || !key) {
+  if (!cfg) {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
   }
 
-  return createServerClient<Database>(url, key, {
+  return createServerClient<Database>(cfg.url, cfg.key, {
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -38,24 +38,38 @@ export async function createClient() {
  * Uses getClaims() first for fast local/JWKS signature verification, then getUser() when needed.
  */
 export const getAuthenticatedClaims = cache(async () => {
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  if (error || !data?.claims?.sub) {
+  if (!getSupabasePublicConfig()) {
     return null;
   }
-  return {
-    userId: data.claims.sub,
-    email: typeof data.claims.email === 'string' ? data.claims.email : null,
-    claims: data.claims,
-  };
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.getClaims();
+    if (error || !data?.claims?.sub) {
+      return null;
+    }
+    return {
+      userId: data.claims.sub,
+      email: typeof data.claims.email === 'string' ? data.claims.email : null,
+      claims: data.claims,
+    };
+  } catch {
+    return null;
+  }
 });
 
 export const getAuthenticatedUser = cache(async () => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) return null;
-  return user;
+  if (!getSupabasePublicConfig()) {
+    return null;
+  }
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return user;
+  } catch {
+    return null;
+  }
 });

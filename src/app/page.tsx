@@ -1,15 +1,30 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowRight, Layers } from 'lucide-react';
+import { getSupabasePublicConfig } from '@/lib/supabase/env';
 import { getAuthenticatedClaims } from '@/lib/supabase/server';
 import { buttonVariants } from '@/components/ui/button';
 import { TopicPreview } from '@/features/authentication/topic-preview';
 
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
-  if (await getAuthenticatedClaims()) redirect('/dashboard');
+  const isConfigured = Boolean(getSupabasePublicConfig());
+  if (isConfigured && (await getAuthenticatedClaims())) {
+    redirect('/dashboard');
+  }
 
   return (
     <main id="main-content" className="min-h-dvh bg-background text-foreground">
+      {!isConfigured ? (
+        <div
+          role="status"
+          className="border-b border-warning/40 bg-warning/15 px-4 py-2.5 text-center text-xs font-medium text-foreground sm:text-sm"
+        >
+          Supabase configuration pending: add <code className="font-mono">NEXT_PUBLIC_SUPABASE_URL</code> and{' '}
+          <code className="font-mono">NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY</code> in Vercel Environment Variables and redeploy.
+        </div>
+      ) : null}
       <header className="mx-auto flex min-h-[4.5rem] max-w-7xl items-center justify-between gap-2 border-b border-border px-5 sm:px-10">
         <span
           className="inline-flex items-center gap-2.5 font-serif text-xl tracking-[.12em]"
