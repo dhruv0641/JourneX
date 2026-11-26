@@ -44,7 +44,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, NativeSelect } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
-import { formatDateInZone, formatDateTimeInZone, formatDurationSeconds } from '@/lib/utilities/dates';
+import {
+  formatDateInZone,
+  formatDateTimeInZone,
+  formatDurationSeconds,
+} from '@/lib/utilities/dates';
 import {
   fetchGlobalDashboardSummary,
   saveGlobalDashboardWidgets,
@@ -63,11 +67,41 @@ interface WidgetPref {
 }
 
 const DEFAULT_WIDGETS: WidgetPref[] = [
-  { id: 'w-kpis', widget_type: 'kpis', title: 'Workspace Metrics', is_visible: true, sort_order: 0 },
-  { id: 'w-chart', widget_type: 'activity_chart', title: 'Activity & Focus Trend', is_visible: true, sort_order: 1 },
-  { id: 'w-topics', widget_type: 'topics_grid', title: 'Active & Pinned Topics', is_visible: true, sort_order: 2 },
-  { id: 'w-deadlines', widget_type: 'deadlines_and_journals', title: 'Upcoming Deadlines & Journals', is_visible: true, sort_order: 3 },
-  { id: 'w-timeline', widget_type: 'recent_activity', title: 'Recent Topic Activity', is_visible: true, sort_order: 4 },
+  {
+    id: 'w-kpis',
+    widget_type: 'kpis',
+    title: 'Workspace Metrics',
+    is_visible: true,
+    sort_order: 0,
+  },
+  {
+    id: 'w-chart',
+    widget_type: 'activity_chart',
+    title: 'Activity & Focus Trend',
+    is_visible: true,
+    sort_order: 1,
+  },
+  {
+    id: 'w-topics',
+    widget_type: 'topics_grid',
+    title: 'Active & Pinned Topics',
+    is_visible: true,
+    sort_order: 2,
+  },
+  {
+    id: 'w-deadlines',
+    widget_type: 'deadlines_and_journals',
+    title: 'Upcoming Deadlines & Journals',
+    is_visible: true,
+    sort_order: 3,
+  },
+  {
+    id: 'w-timeline',
+    widget_type: 'recent_activity',
+    title: 'Recent Topic Activity',
+    is_visible: true,
+    sort_order: 4,
+  },
 ];
 
 function SortableWidgetFrame({
@@ -116,10 +150,22 @@ function SortableWidgetFrame({
             <span className="font-semibold">{widget.title}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" disabled={isFirst} aria-label="Move widget up" onClick={() => onMove(-1)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isFirst}
+              aria-label="Move widget up"
+              onClick={() => onMove(-1)}
+            >
               <ArrowUp className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
-            <Button variant="ghost" size="icon" disabled={isLast} aria-label="Move widget down" onClick={() => onMove(1)}>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isLast}
+              aria-label="Move widget down"
+              onClick={() => onMove(1)}
+            >
               <ArrowDown className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
             <Button
@@ -128,7 +174,11 @@ function SortableWidgetFrame({
               aria-label={widget.is_visible ? 'Hide widget' : 'Show widget'}
               onClick={onToggleVisibility}
             >
-              {widget.is_visible ? <Eye className="h-3.5 w-3.5" aria-hidden="true" /> : <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />}
+              {widget.is_visible ? (
+                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
             </Button>
           </div>
         </div>
@@ -153,7 +203,7 @@ function TopicDomainCard({ topic }: { topic: TopicSummaryItem }) {
   return (
     <Link
       href={`/topics/${topic.slug}`}
-      className="group block rounded-lg border border-border bg-card p-5 transition-colors hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group block min-w-0 rounded-2xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:p-5"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
@@ -169,7 +219,9 @@ function TopicDomainCard({ topic }: { topic: TopicSummaryItem }) {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          {topic.is_pinned ? <Pin className="h-3.5 w-3.5 text-primary" aria-label="Pinned" /> : null}
+          {topic.is_pinned ? (
+            <Pin className="h-3.5 w-3.5 text-primary" aria-label="Pinned" />
+          ) : null}
           {topic.is_favorite ? (
             <Star className="h-3.5 w-3.5 fill-accent text-accent" aria-label="Favorite" />
           ) : null}
@@ -351,7 +403,9 @@ export function GlobalDashboardClient({
             <Card>
               <CardContent className="flex items-center justify-between p-5">
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground">Active / Archived Topics</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Active / Archived Topics
+                  </p>
                   <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
                     {summary.counts.active_topics}
                     <span className="ml-1.5 text-sm font-normal text-muted-foreground">
@@ -502,7 +556,10 @@ export function GlobalDashboardClient({
                 ) : (
                   <div className="divide-y divide-border">
                     {summary.upcoming_deadlines.map((d) => (
-                      <div key={d.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                      <div
+                        key={d.id}
+                        className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"
+                      >
                         <div className="min-w-0">
                           <p className="truncate font-medium">{d.title}</p>
                           <p className="text-xs text-muted-foreground">{d.topic_name}</p>
@@ -535,7 +592,10 @@ export function GlobalDashboardClient({
                 ) : (
                   <div className="divide-y divide-border">
                     {summary.recent_journals.map((j) => (
-                      <div key={j.id} className="flex items-center justify-between gap-2 py-2.5 text-sm">
+                      <div
+                        key={j.id}
+                        className="flex items-center justify-between gap-2 py-2.5 text-sm"
+                      >
                         <div className="min-w-0">
                           <p className="truncate font-medium">{j.title || j.entry_date}</p>
                           <p className="text-xs text-muted-foreground">
@@ -568,7 +628,10 @@ export function GlobalDashboardClient({
               ) : (
                 <div className="divide-y divide-border">
                   {summary.recent_activities.map((a) => (
-                    <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm">
+                    <div
+                      key={a.id}
+                      className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"
+                    >
                       <div className="min-w-0">
                         <p className="font-medium">{a.title}</p>
                         <p className="text-xs text-muted-foreground">
@@ -592,21 +655,30 @@ export function GlobalDashboardClient({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{appName} Command Center</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Real-time overview calculated directly from your persisted Supabase records.
+    <div className="min-w-0 space-y-6">
+      <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-7">
+        <div
+          className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
+          aria-hidden="true"
+        />
+        <div className="relative">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
+            Your workspace at a glance
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {appName} Command Center
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+            See what needs attention, keep your momentum, and jump back into your topics.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="relative mt-5 flex flex-wrap items-center gap-2">
           <NativeSelect
             aria-label="Global date range"
             value={String(days)}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="w-36"
+            className="min-h-11 w-full sm:w-40"
           >
             <option value="7">Last 7 days</option>
             <option value="30">Last 30 days</option>
@@ -615,25 +687,21 @@ export function GlobalDashboardClient({
           </NativeSelect>
           <Button
             variant={customizing ? 'default' : 'outline'}
-            size="sm"
+            size="touch"
             onClick={() => setCustomizing((prev) => !prev)}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
             {customizing ? 'Done' : 'Customize Widgets'}
           </Button>
           {customizing ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => void persistWidgets(DEFAULT_WIDGETS)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => void persistWidgets(DEFAULT_WIDGETS)}>
               <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
               Reset
             </Button>
           ) : null}
           <Link
             href="/topics/new"
-            className="inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-95"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New Topic
@@ -643,7 +711,7 @@ export function GlobalDashboardClient({
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={widgets.map((w) => w.id)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {widgets.map((widget, idx) => (
               <SortableWidgetFrame
                 key={widget.id}

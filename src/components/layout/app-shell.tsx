@@ -116,7 +116,12 @@ export function AppShell({
       ]);
       pushToast({
         kind: 'success',
-        title: action === 'stop' ? 'Session saved' : action === 'pause' ? 'Timer paused' : 'Timer resumed',
+        title:
+          action === 'stop'
+            ? 'Session saved'
+            : action === 'pause'
+              ? 'Timer paused'
+              : 'Timer resumed',
       });
     } catch (err) {
       pushToast({
@@ -213,9 +218,7 @@ export function AppShell({
       <nav aria-label="Workspace navigation" className="space-y-1 px-2.5">
         {primaryNav.map((item) => {
           const active =
-            item.href === '/dashboard'
-              ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
+            item.href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
@@ -312,11 +315,11 @@ export function AppShell({
   );
 
   return (
-    <div className="flex min-h-dvh bg-background text-foreground">
+    <div className="flex min-h-dvh min-w-0 bg-background text-foreground">
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden shrink-0 border-r border-border bg-card transition-[width] duration-200 md:block',
+          'hidden shrink-0 border-r border-border bg-card transition-[width] duration-200 lg:block',
           sidebarCollapsed ? 'w-[68px]' : 'w-[260px]',
         )}
       >
@@ -325,7 +328,12 @@ export function AppShell({
 
       {/* Mobile Navigation Drawer */}
       <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
-        <SheetContent side="left" title={appName} description="Workspace navigation & topics" className="p-0">
+        <SheetContent
+          side="left"
+          title={appName}
+          description="Workspace navigation & topics"
+          className="p-0"
+        >
           {renderSidebarContent(false)}
         </SheetContent>
       </Sheet>
@@ -333,28 +341,37 @@ export function AppShell({
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur-sm">
-          <div className="flex h-16 items-center justify-between gap-2 px-3 sm:px-6">
+          <div className="flex min-h-16 items-center justify-between gap-2 px-3 sm:px-6">
             <div className="flex min-w-0 items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileSheetOpen(true)}
                 aria-label="Open navigation menu"
-                className="md:hidden"
+                className="min-h-11 min-w-11 lg:hidden"
               >
                 <Menu className="h-5 w-5" aria-hidden="true" />
               </Button>
               <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 text-sm">
-                <span className="font-semibold text-foreground md:hidden" translate="no">
+                <span
+                  className={cn(
+                    'max-w-24 truncate font-semibold text-foreground lg:hidden',
+                    activeTimer && 'hidden sm:inline',
+                  )}
+                  translate="no"
+                >
                   {appName}
                 </span>
-                <span className="hidden items-center gap-1.5 md:flex">
+                <span className="hidden items-center gap-1.5 lg:flex">
                   <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">
                     {appName}
                   </Link>
                   {breadcrumbs.map((crumb, idx) => (
                     <span key={crumb} className="flex items-center gap-1.5">
-                      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+                      <ChevronRight
+                        className="h-3.5 w-3.5 text-muted-foreground"
+                        aria-hidden="true"
+                      />
                       <span
                         className={cn(
                           'truncate',
@@ -373,7 +390,7 @@ export function AppShell({
 
             <div className="flex items-center gap-1.5 sm:gap-2">
               {activeTimer ? (
-                <div className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs">
+                <div className="flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-1.5 py-1 text-xs sm:gap-1.5 sm:px-2.5">
                   <span
                     className={cn(
                       'h-2 w-2 rounded-full',
@@ -391,7 +408,7 @@ export function AppShell({
                       handleTimerAction(activeTimer.status === 'running' ? 'pause' : 'resume')
                     }
                     aria-label={activeTimer.status === 'running' ? 'Pause timer' : 'Resume timer'}
-                    className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full hover:bg-background"
+                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {activeTimer.status === 'running' ? (
                       <Pause className="h-3 w-3" aria-hidden="true" />
@@ -404,7 +421,7 @@ export function AppShell({
                     disabled={timerBusy}
                     onClick={() => handleTimerAction('stop')}
                     aria-label="Stop and save timer"
-                    className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-destructive hover:bg-background"
+                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-destructive hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Square className="h-3 w-3" aria-hidden="true" />
                   </button>
@@ -415,7 +432,7 @@ export function AppShell({
                 variant="outline"
                 size="sm"
                 onClick={() => setCommandPaletteOpen(true)}
-                className="min-h-10 gap-2 px-2.5 sm:px-3"
+                className="min-h-11 min-w-11 gap-2 px-2.5 sm:px-3"
               >
                 <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <span className="sr-only sm:hidden">Search</span>
@@ -436,6 +453,7 @@ export function AppShell({
                   variant="ghost"
                   size="icon"
                   aria-label={`Notifications (${unreadNotifs.length} unread)`}
+                  className="min-h-11 min-w-11"
                   onClick={() => {
                     setNotifOpen((prev) => !prev);
                     setProfileOpen(false);
@@ -478,9 +496,7 @@ export function AppShell({
                               <span className="font-medium text-foreground">{n.title}</span>
                               {!n.is_read ? <Badge variant="primary">New</Badge> : null}
                             </div>
-                            {n.body ? (
-                              <p className="mt-1 text-muted-foreground">{n.body}</p>
-                            ) : null}
+                            {n.body ? <p className="mt-1 text-muted-foreground">{n.body}</p> : null}
                           </li>
                         ))}
                       </ul>
@@ -489,10 +505,12 @@ export function AppShell({
                 ) : null}
               </div>
 
-              <ThemeToggle compact />
+              <span className="hidden sm:inline-flex">
+                <ThemeToggle compact />
+              </span>
 
               {/* Profile Menu */}
-              <div className="relative">
+              <div className="relative hidden sm:block">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -537,16 +555,18 @@ export function AppShell({
 
         <main
           id="main-content"
-          className="flex-1 px-3 py-5 pb-24 sm:px-6 md:pb-8"
+          className="min-w-0 flex-1 px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 lg:pb-8"
         >
-          <div className="mx-auto max-w-7xl">{children}</div>
+          <div className="mx-auto min-w-0 max-w-7xl motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300">
+            {children}
+          </div>
         </main>
       </div>
 
       {/* Dedicated Mobile Bottom Navigation (5 touch-friendly slots >= 44px) */}
       <nav
         aria-label="Mobile navigation"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-12px_32px_-24px_rgba(15,23,42,0.55)] backdrop-blur-xl lg:hidden"
       >
         {[
           { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
@@ -558,15 +578,22 @@ export function AppShell({
           const active =
             item.href === '/dashboard'
               ? pathname === '/dashboard'
-              : pathname.startsWith(item.href);
+              : item.href === '/topics'
+                ? pathname === '/topics' ||
+                  (pathname.startsWith('/topics/') && pathname !== '/topics/new')
+                : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium',
-                active ? 'text-primary' : 'text-muted-foreground',
+                'relative flex min-h-16 flex-col items-center justify-center gap-1 rounded-xl text-[11px] font-semibold transition-[color,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-95',
+                item.href === '/topics/new' &&
+                  'mx-1 -mt-3 rounded-2xl border-4 border-card bg-primary text-primary-foreground shadow-lg',
+                item.href !== '/topics/new' &&
+                  (active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'),
               )}
+              aria-current={active ? 'page' : undefined}
             >
               <item.icon className="h-5 w-5" aria-hidden="true" />
               <span>{item.label}</span>

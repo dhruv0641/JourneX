@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
 import { useTheme } from 'next-themes';
@@ -13,6 +13,8 @@ import {
   Layers,
   LayoutDashboard,
   Moon,
+  Mic,
+  MicOff,
   NotebookPen,
   Plus,
   Search,
@@ -24,6 +26,21 @@ import { runGlobalSearch } from '@/services/modules.service';
 import { useUiStore } from '@/stores/ui-store';
 import type { GlobalSearchResultItem, TopicRow } from '@/types/domain';
 
+type VoiceRecognition = {
+  lang: string;
+  interimResults: boolean;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type VoiceWindow = Window & {
+  SpeechRecognition?: new () => VoiceRecognition;
+  webkitSpeechRecognition?: new () => VoiceRecognition;
+};
+
 export function CommandPalette({ topics }: { topics: TopicRow[] }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -33,8 +50,56 @@ export function CommandPalette({ topics }: { topics: TopicRow[] }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GlobalSearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [voiceError, setVoiceError] = useState('');
+  const recognitionRef = useRef<VoiceRecognition | null>(null);
+
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setListening(false);
+  };
+
+  const startListening = () => {
+    if (listening) {
+      stopListening();
+      return;
+    }
+    const voiceWindow = window as VoiceWindow;
+    const Recognition = voiceWindow.SpeechRecognition ?? voiceWindow.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceError('Voice search is unavailable in this browser. Type to search instead.');
+      return;
+    }
+    setVoiceError('');
+    const recognition = new Recognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript?.trim();
+      if (transcript) setQuery(transcript);
+    };
+    recognition.onerror = () => {
+      setVoiceError('Microphone access failed. Check browser permissions or type your search.');
+      setListening(false);
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setListening(false);
+    };
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      recognitionRef.current = null;
+      setVoiceError('Voice search could not start. Type to search instead.');
+    }
+  };
 
   const closePalette = () => {
+    stopListening();
+    setVoiceError('');
     setQuery('');
     setResults([]);
     setOpen(false);
@@ -42,9 +107,23 @@ export function CommandPalette({ topics }: { topics: TopicRow[] }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && open) {
+        recognitionRef.current?.stop();
+        recognitionRef.current = null;
+        setListening(false);
+        setVoiceError('');
+        setQuery('');
+        setResults([]);
+        setOpen(false);
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault();
         if (open) {
+          recognitionRef.current?.stop();
+          recognitionRef.current = null;
+          setListening(false);
+          setVoiceError('');
           setQuery('');
           setResults([]);
           setOpen(false);
@@ -77,6 +156,8 @@ export function CommandPalette({ topics }: { topics: TopicRow[] }) {
     return () => window.clearTimeout(handle);
   }, [open, query]);
 
+  useEffect(() => () => recognitionRef.current?.stop(), []);
+
   if (!open) return null;
 
   const navigate = (href: string) => {
@@ -106,11 +187,11 @@ export function CommandPalette({ topics }: { topics: TopicRow[] }) {
       role="dialog"
       aria-modal="true"
       aria-label="Global search and command palette"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-[12vh] backdrop-blur-[1px]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-3 pt-[max(1rem,8dvh)] backdrop-blur-[1px] sm:px-4 sm:pt-[12vh]"
       onClick={closePalette}
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl"
+        className="w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-2xl motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         <Command shouldFilter={!query.trim()} label="Command palette">
@@ -127,14 +208,38 @@ export function CommandPalette({ topics }: { topics: TopicRow[] }) {
                 }
               }}
               placeholder="Search topics, tasks, journals, records, calculators, or run an action…"
-              className="h-12 w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="h-14 min-w-0 w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
+            <button
+              type="button"
+              onClick={startListening}
+              aria-label={listening ? 'Stop voice search' : 'Start voice search'}
+              aria-pressed={listening}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {listening ? (
+                <MicOff className="h-5 w-5 text-destructive" aria-hidden="true" />
+              ) : (
+                <Mic className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
             <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline-block">
               ESC
             </kbd>
           </div>
 
-          <Command.List className="max-h-96 overflow-y-auto overscroll-contain p-2">
+          {listening ? (
+            <p role="status" className="px-4 py-2 text-sm text-primary">
+              Listening… speak your search.
+            </p>
+          ) : null}
+          {voiceError ? (
+            <p role="status" className="px-4 py-2 text-sm text-destructive">
+              {voiceError}
+            </p>
+          ) : null}
+
+          <Command.List className="max-h-[min(24rem,65dvh)] overflow-y-auto overscroll-contain p-2">
             {loading ? (
               <div className="px-3 py-6 text-center text-xs text-muted-foreground">
                 Searching workspace…
