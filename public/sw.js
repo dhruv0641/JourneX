@@ -2,7 +2,7 @@
 // Caches public static assets and offline shell ONLY.
 // Never caches authenticated API/Supabase responses or private user data.
 
-const CACHE_NAME = 'nexora-shell-v1';
+const CACHE_NAME = 'journalx-shell-v2';
 const OFFLINE_URL = '/offline';
 
 self.addEventListener('install', (event) => {
