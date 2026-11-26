@@ -1,0 +1,85 @@
+import {
+  Activity,
+  BarChart3,
+  BookOpen,
+  Box,
+  Briefcase,
+  Calculator,
+  Calendar,
+  CheckSquare,
+  ClipboardList,
+  Clock,
+  Cpu,
+  FileCode2,
+  FileText,
+  Flag,
+  Flame,
+  Gauge,
+  GraduationCap,
+  Kanban,
+  Layers,
+  Library,
+  LineChart,
+  ListChecks,
+  NotebookPen,
+  Paperclip,
+  PiggyBank,
+  Receipt,
+  Sparkles,
+  Table2,
+  Target,
+  Timer,
+  TrendingUp,
+  Wallet,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react';
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  activity: Activity,
+  'bar-chart-3': BarChart3,
+  'book-open': BookOpen,
+  box: Box,
+  briefcase: Briefcase,
+  calculator: Calculator,
+  calendar: Calendar,
+  'check-square': CheckSquare,
+  'clipboard-list': ClipboardList,
+  clock: Clock,
+  cpu: Cpu,
+  'file-code-2': FileCode2,
+  'file-text': FileText,
+  flag: Flag,
+  flame: Flame,
+  gauge: Gauge,
+  'graduation-cap': GraduationCap,
+  kanban: Kanban,
+  layers: Layers,
+  library: Library,
+  'line-chart': LineChart,
+  'list-checks': ListChecks,
+  'notebook-pen': NotebookPen,
+  paperclip: Paperclip,
+  'piggy-bank': PiggyBank,
+  receipt: Receipt,
+  sparkles: Sparkles,
+  'table-2': Table2,
+  target: Target,
+  timer: Timer,
+  'trending-up': TrendingUp,
+  wallet: Wallet,
+  zap: Zap,
+};
+
+export const AVAILABLE_TOPIC_ICONS = Object.keys(ICON_MAP);
+
+export function TopicIcon({
+  name,
+  className = 'h-4 w-4',
+}: {
+  name?: string | null;
+  className?: string;
+}) {
+  const Icon = (name && ICON_MAP[name]) || Layers;
+  return <Icon className={className} aria-hidden="true" />;
+}
