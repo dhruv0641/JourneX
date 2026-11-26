@@ -580,6 +580,9 @@ isOneToOne: false
 "global_search_records":
 { Args: { "p_limit"?: number,"p_query": string }; Returns: Json
                            },
+"health_check":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "resolve_safe_timezone":
 { Args: { "p_tz": string }; Returns: string
                            },

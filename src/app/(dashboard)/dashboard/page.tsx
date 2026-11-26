@@ -1,15 +1,13 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { GlobalDashboardClient } from '@/features/dashboard/global-dashboard-client';
+import { TodayWorkspace } from '@/features/dashboard/today-workspace';
+import { getLocalDateKey } from '@/lib/utilities/dates';
 import { createClient, getAuthenticatedClaims } from '@/lib/supabase/server';
-import {
-  fetchGlobalDashboardSummary,
-  listGlobalDashboardWidgets,
-} from '@/services/modules.service';
+import { fetchGlobalDashboardSummary } from '@/services/modules.service';
 import { fetchWorkspaceBootstrap } from '@/services/workspace.service';
 
 export const metadata: Metadata = {
-  title: 'Dashboard',
+  title: 'Today',
 };
 
 export default async function DashboardPage() {
@@ -19,23 +17,13 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const bootstrap = await fetchWorkspaceBootstrap(supabase, claims.userId, claims.email ?? '');
   const timezone = bootstrap.profile?.timezone ?? 'UTC';
-  const rangePref = bootstrap.preferences?.default_dashboard_range ?? '30d';
-  const initialDays =
-    rangePref === '7d' ? 7 : rangePref === '90d' ? 90 : rangePref === 'all' ? 365 : 30;
-
-  const [summary, widgets] = await Promise.all([
-    fetchGlobalDashboardSummary(supabase, initialDays, timezone),
-    listGlobalDashboardWidgets(supabase, claims.userId),
-  ]);
-
+  const summary = await fetchGlobalDashboardSummary(supabase, 7, timezone);
   return (
-    <GlobalDashboardClient
+    <TodayWorkspace
       userId={claims.userId}
-      appName={bootstrap.preferences?.app_name ?? 'NEXORA'}
       timezone={timezone}
-      initialDays={initialDays}
       initialSummary={summary}
-      initialWidgets={widgets}
+      initialDate={getLocalDateKey(new Date(), timezone)}
     />
   );
 }

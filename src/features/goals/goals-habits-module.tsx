@@ -74,39 +74,46 @@ export function GoalsModule({
       <h2 className="text-lg font-semibold">{mod.name}</h2>
       <Card>
         <CardContent className="p-4">
-          <form onSubmit={handleCreate} className="grid gap-2.5 sm:grid-cols-12">
-            <Input
-              className="sm:col-span-5"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Goal title (e.g., 20 study hours)…"
-              required
-            />
-            <NativeSelect
-              className="sm:col-span-2"
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as typeof period)}
-            >
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="monthly">Monthly</option>
-              <option value="custom">Custom</option>
-            </NativeSelect>
-            <Input
-              className="sm:col-span-2"
-              type="number"
-              min={1}
-              step="any"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-            />
-            <Input
-              className="sm:col-span-1"
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              placeholder="Unit"
-            />
-            <Button type="submit" className="sm:col-span-2">
+          <form
+            onSubmit={handleCreate}
+            className="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-12"
+          >
+            <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-5">
+              Goal title
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Goal title (e.g., 20 study hours)…"
+                required
+              />
+            </label>
+            <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-2">
+              Repeat
+              <NativeSelect
+                value={period}
+                onChange={(e) => setPeriod(e.target.value as typeof period)}
+              >
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="custom">Custom</option>
+              </NativeSelect>
+            </label>
+            <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-2">
+              Target
+              <Input
+                type="number"
+                min={1}
+                step="any"
+                value={target}
+                onChange={(e) => setTarget(e.target.value)}
+              />
+            </label>
+            <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-1">
+              Unit
+              <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="Unit" />
+            </label>
+            <Button type="submit" className="xl:col-span-2">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Goal
             </Button>
@@ -123,13 +130,16 @@ export function GoalsModule({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {goals.map((g) => {
-            const pct = Math.min(100, Math.round((g.current_value / Math.max(1, g.target_value)) * 100));
+            const pct = Math.min(
+              100,
+              Math.round((g.current_value / Math.max(1, g.target_value)) * 100),
+            );
             return (
               <Card key={g.id}>
                 <CardContent className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold">{g.title}</h3>
+                      <h3 className="break-words font-semibold">{g.title}</h3>
                       <p className="text-xs capitalize text-muted-foreground">
                         {g.period_type} •{' '}
                         <span className="font-mono tabular-nums">
@@ -137,11 +147,16 @@ export function GoalsModule({
                         </span>
                       </p>
                     </div>
-                    <Badge variant={g.status === 'completed' ? 'success' : 'primary'}>
-                      {pct}%
-                    </Badge>
+                    <Badge variant={g.status === 'completed' ? 'success' : 'primary'}>{pct}%</Badge>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div
+                    role="progressbar"
+                    aria-label={g.title}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={pct}
+                    className="h-2 overflow-hidden rounded-full bg-muted"
+                  >
                     <div
                       className="h-full rounded-full bg-primary transition-[width]"
                       style={{ width: `${pct}%` }}
@@ -283,23 +298,29 @@ export function HabitsModule({
               await refresh();
               pushToast({ kind: 'success', title: 'Habit added' });
             }}
-            className="flex flex-col gap-2.5 sm:flex-row"
+            className="grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
           >
-            <Input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="New habit (e.g., 30 min vocabulary review)…"
-              required
-              className="flex-1"
-            />
-            <NativeSelect
-              value={schedule}
-              onChange={(e) => setSchedule(e.target.value as 'daily' | 'weekdays')}
-              className="sm:w-36"
-            >
-              <option value="daily">Daily</option>
-              <option value="weekdays">Weekdays</option>
-            </NativeSelect>
+            <label className="grid gap-1 text-sm font-medium">
+              Habit name
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="New habit (e.g., 30 min vocabulary review)…"
+                required
+                className="flex-1"
+              />
+            </label>
+            <label className="grid gap-1 text-sm font-medium">
+              Repeat
+              <NativeSelect
+                value={schedule}
+                onChange={(e) => setSchedule(e.target.value as 'daily' | 'weekdays')}
+                className="sm:w-36"
+              >
+                <option value="daily">Daily</option>
+                <option value="weekdays">Weekdays</option>
+              </NativeSelect>
+            </label>
             <Button type="submit">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Add Habit
@@ -324,9 +345,9 @@ export function HabitsModule({
               const streak = computeStreak(h.id);
               return (
                 <Card key={h.id}>
-                  <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                     <div>
-                      <p className="font-semibold">{h.title}</p>
+                      <p className="break-words font-semibold">{h.title}</p>
                       <p className="text-xs capitalize text-muted-foreground">
                         {h.schedule_type} • Streak:{' '}
                         <span className="font-mono font-semibold text-foreground tabular-nums">
@@ -335,6 +356,7 @@ export function HabitsModule({
                       </p>
                     </div>
                     <Button
+                      aria-pressed={checkedToday}
                       variant={checkedToday ? 'default' : 'outline'}
                       size="sm"
                       onClick={async () => {

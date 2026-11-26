@@ -92,7 +92,12 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     await page.getByLabel('Password', { exact: true }).fill(password);
     await page.getByRole('button', { name: 'Sign in' }).click();
     await page.waitForURL('**/dashboard', { timeout: 20_000 });
-    await expect(page.getByRole('heading', { name: /NEXORA Command Center/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
+    await page.getByRole('link', { name: 'Open review' }).click();
+    await expect(page.getByRole('heading', { name: 'Workspace review' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Global date range' })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: 'Today', exact: true })).toBeVisible();
 
     // Capture Light Dashboard Screenshot (Desktop 1440)
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -117,7 +122,7 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     await page.getByRole('button', { name: /Next Step/i }).click();
     await page.getByRole('button', { name: 'Create Topic' }).click();
     await page.waitForURL('**/topics/blank-scratchpad', { timeout: 20_000 });
-    await expect(page.getByRole('heading', { name: 'Blank Scratchpad' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Blank Scratchpad', level: 1 })).toBeVisible();
 
     // 3. Create an IELTS Preparation Topic using Template + Intent Discovery
     await page.goto('/topics/new');
@@ -134,7 +139,7 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     await page.getByRole('button', { name: /Next Step/i }).click();
     await page.getByRole('button', { name: 'Create Topic' }).click();
     await page.waitForURL('**/topics/ielts-academic-2026', { timeout: 20_000 });
-    await expect(page.getByRole('heading', { name: 'IELTS Academic 2026' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'IELTS Academic 2026', level: 1 })).toBeVisible();
 
     // 4. Add multiple practice sessions on the same day
     await page.getByRole('tab', { name: /Practice & Mock Scores/i }).click();
@@ -183,7 +188,7 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
     await page.getByPlaceholder('Custom module title…').fill('Daily Study Habits');
     await page.getByLabel('Choose module type').selectOption('habits');
     await page.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(page.getByText('Daily Study Habits').first()).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole('tab', { name: 'Daily Study Habits' })).toBeVisible({ timeout: 10_000 });
 
     await page.reload();
     await expect(page.getByRole('tab', { name: /Daily Study Habits/i })).toBeVisible({ timeout: 10_000 });
@@ -259,6 +264,17 @@ test.describe.serial('NEXORA End-to-End Enterprise Verification', () => {
         await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'dashboard-dark-mobile-390.png') });
       }
     }
+
+    // Phone module picker supports deep links, history, and reading a published entry.
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto('/topics/ielts-academic-2026?tab=tasks');
+    const picker = page.getByRole('combobox', { name: 'Topic section' });
+    await expect(picker.locator('option:checked')).toHaveText('Study Tasks');
+    await picker.selectOption({ label: 'Study Reflection' });
+    await page.getByRole('button', { name: 'Entries', exact: true }).click();
+    await expect(page.getByText('Day 1 Mock Analysis', { exact: true })).toBeVisible();
+    await page.goBack();
+    await expect(picker.locator('option:checked')).toHaveText('Study Tasks');
 
     expect(pageErrors).toEqual([]);
     expect(consoleErrors).toEqual([]);

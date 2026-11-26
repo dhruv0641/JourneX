@@ -2,15 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  CheckCircle2,
-  Circle,
-  Clock,
-  Kanban,
-  List,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Kanban, List, Plus, Trash2 } from 'lucide-react';
 import { ConflictBanner, EmptyState } from '@/components/shared/state-views';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -55,7 +47,8 @@ export function TasksModule({
     statuses?: string[];
     preferredView?: 'list' | 'kanban';
   };
-  const statuses = cfg.statuses && cfg.statuses.length >= 2 ? cfg.statuses : ['todo', 'in_progress', 'done'];
+  const statuses =
+    cfg.statuses && cfg.statuses.length >= 2 ? cfg.statuses : ['todo', 'in_progress', 'done'];
 
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>(
     cfg.preferredView === 'kanban' ? 'kanban' : 'list',
@@ -197,6 +190,7 @@ export function TasksModule({
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
             size="sm"
+            aria-pressed={viewMode === 'list'}
             onClick={() => setViewMode('list')}
           >
             <List className="h-3.5 w-3.5" aria-hidden="true" />
@@ -205,6 +199,7 @@ export function TasksModule({
           <Button
             variant={viewMode === 'kanban' ? 'default' : 'outline'}
             size="sm"
+            aria-pressed={viewMode === 'kanban'}
             onClick={() => setViewMode('kanban')}
           >
             <Kanban className="h-3.5 w-3.5" aria-hidden="true" />
@@ -219,8 +214,11 @@ export function TasksModule({
 
       <Card>
         <CardContent className="p-4">
-          <form onSubmit={handleCreateTask} className="grid gap-2.5 sm:grid-cols-12">
-            <div className="sm:col-span-5">
+          <form
+            onSubmit={handleCreateTask}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-2.5"
+          >
+            <div className="min-w-0">
               <Label htmlFor={`new-task-${mod.id}`} className="sr-only">
                 Task title
               </Label>
@@ -232,100 +230,121 @@ export function TasksModule({
                 required
               />
             </div>
-            <div className="sm:col-span-2">
-              <NativeSelect
-                aria-label="Task priority"
-                value={newPriority}
-                onChange={(e) =>
-                  setNewPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')
-                }
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </NativeSelect>
-            </div>
-            <div className="sm:col-span-2">
-              <Input
-                type="date"
-                aria-label="Due date"
-                value={newDue}
-                onChange={(e) => setNewDue(e.target.value)}
-              />
-            </div>
-            <div className="sm:col-span-1">
-              <Input
-                type="number"
-                min={0}
-                aria-label="Estimated minutes"
-                placeholder="Min"
-                value={newEstimated}
-                onChange={(e) => setNewEstimated(e.target.value)}
-              />
-            </div>
-            <div className="sm:col-span-2">
+            <div>
               <Button type="submit" disabled={creating} className="w-full">
                 <Plus className="h-4 w-4" aria-hidden="true" />
                 Add Task
               </Button>
             </div>
-          </form>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
-            <Input
-              aria-label="Search tasks"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter tasks…"
-              className="max-w-xs"
-            />
-            <NativeSelect
-              aria-label="Filter by status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-36"
-            >
-              <option value="all">All statuses</option>
-              {statuses.map((st) => (
-                <option key={st} value={st}>
-                  {st.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </NativeSelect>
-            <NativeSelect
-              aria-label="Filter by priority"
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="w-36"
-            >
-              <option value="all">All priorities</option>
-              <option value="urgent">Urgent</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </NativeSelect>
-            {selectedIds.length > 0 ? (
-              <div className="ml-auto flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">
-                  {selectedIds.length} selected
-                </span>
-                <Button size="sm" variant="outline" onClick={handleBulkComplete}>
-                  Mark Done
-                </Button>
-                <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
-                  Delete
-                </Button>
+            <details className="col-span-full">
+              <summary className="w-fit cursor-pointer py-2.5 text-sm font-medium text-primary">
+                Task details
+              </summary>
+              <div className="grid gap-3 pt-1 sm:grid-cols-3">
+                <div className="space-y-1">
+                  <Label htmlFor={`task-priority-${mod.id}`}>Priority</Label>
+                  <NativeSelect
+                    id={`task-priority-${mod.id}`}
+                    aria-label="Task priority"
+                    value={newPriority}
+                    onChange={(e) =>
+                      setNewPriority(e.target.value as 'low' | 'medium' | 'high' | 'urgent')
+                    }
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </NativeSelect>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`task-due-${mod.id}`}>Due date</Label>
+                  <Input
+                    id={`task-due-${mod.id}`}
+                    type="date"
+                    aria-label="Due date"
+                    value={newDue}
+                    onChange={(e) => setNewDue(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor={`task-estimate-${mod.id}`}>Estimated minutes</Label>
+                  <Input
+                    id={`task-estimate-${mod.id}`}
+                    type="number"
+                    min={0}
+                    aria-label="Estimated minutes"
+                    placeholder="Min"
+                    value={newEstimated}
+                    onChange={(e) => setNewEstimated(e.target.value)}
+                  />
+                </div>
               </div>
-            ) : null}
-          </div>
+            </details>
+          </form>
         </CardContent>
       </Card>
+      <section
+        aria-label="Task filters"
+        className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center"
+      >
+        <Input
+          aria-label="Search tasks"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter tasks…"
+          className="col-span-full sm:max-w-xs"
+        />
+        <NativeSelect
+          aria-label="Filter by status"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="sm:w-36"
+        >
+          <option value="all">All statuses</option>
+          {statuses.map((st) => (
+            <option key={st} value={st}>
+              {st.replace(/_/g, ' ')}
+            </option>
+          ))}
+        </NativeSelect>
+        <NativeSelect
+          aria-label="Filter by priority"
+          value={priorityFilter}
+          onChange={(e) => setPriorityFilter(e.target.value)}
+          className="sm:w-36"
+        >
+          <option value="all">All priorities</option>
+          <option value="urgent">Urgent</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </NativeSelect>
+        {selectedIds.length > 0 ? (
+          <div className="col-span-full flex flex-wrap items-center gap-2 sm:ml-auto">
+            <span className="text-xs text-muted-foreground">{selectedIds.length} selected</span>
+            <Button size="sm" variant="outline" onClick={handleBulkComplete}>
+              Mark Done
+            </Button>
+            <Button size="sm" variant="destructive" onClick={handleBulkDelete}>
+              Delete
+            </Button>
+          </div>
+        ) : null}
+      </section>
 
       {tasks.length === 0 ? (
         <EmptyState
-          title="No tasks yet"
-          description="Add your first task above with priority, due date, and optional subtasks."
+          title={
+            search || statusFilter !== 'all' || priorityFilter !== 'all'
+              ? 'No matching tasks'
+              : 'No tasks yet'
+          }
+          description={
+            search || statusFilter !== 'all' || priorityFilter !== 'all'
+              ? 'Adjust the search or filters to see more tasks.'
+              : 'Add your first task above.'
+          }
         />
       ) : viewMode === 'kanban' ? (
         <div className="grid gap-4 md:grid-cols-3">

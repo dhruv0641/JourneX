@@ -36,6 +36,7 @@ All schema objects, RLS policies, Storage bucket rules, atomic RPC functions, an
 3. `20261126173003_rpc_functions.sql` — Atomic RPCs (`create_topic_atomic`, `duplicate_topic_atomic`, `start_time_session_atomic`, `transition_time_session_atomic`, `get_global_dashboard_summary`, `get_topic_analytics_summary`, `global_search_records`).
 4. `20261126173004_seed_templates.sql` — 6 idempotent starter templates (`IELTS Preparation`, `Personal Finance`, `AI Engineering Lab`, `Fitness & Training`, `Daily Productivity`, `Blank Modular Topic`).
 5. `20261126173005_fk_covering_indexes.sql` — Covering B-tree indexes for composite foreign keys.
+6. `20261126200001_health_check_rpc.sql` — Safe read-only `public.health_check()` RPC for `/api/health` database connectivity & Supabase keep-alive pings.
 
 ### Apply Migrations
 
@@ -73,10 +74,10 @@ pnpm start --port 3000
 ```
 
 ### Vercel Deployment
-1. Import `https://github.com/dhruv0641/JourneX` into Vercel.
-2. Framework preset: **Next.js**. Install command: `pnpm install --frozen-lockfile`. Build command: `pnpm build`.
-3. Configure **only** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Vercel Runtime Environment Variables (the Next.js app runtime requires no secret role key because all queries & RPCs enforce user JWT + PostgreSQL RLS!).
-4. Verify `/api/health` returns `200 OK` after deployment (`{ "status": "ok" }`).
+1. Import `https://github.com/dhruv0641/JourneX` into Vercel (`vercel.json` is already preconfigured for Next.js + `pnpm`).
+2. Configure **only** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in Vercel Runtime Environment Variables (the Next.js app runtime requires no secret role key because all queries & RPCs enforce user JWT + PostgreSQL RLS!).
+3. Verify `/api/health` returns `200 OK` after deployment (`{ "status": "ok", "database": "connected", "ready": true }`).
+4. **Prevent Supabase Free Tier Inactivity Pausing:** In your GitHub repository **Settings → Secrets and variables → Actions → Variables**, add `APP_HEALTH_URL` set to `https://<your-domain>.vercel.app/api/health`. The workflow [.github/workflows/keep-alive.yml](../.github/workflows/keep-alive.yml) pings `/api/health` twice weekly (Monday & Thursday at `09:00 UTC`), running `public.health_check()` inside PostgreSQL so the free-tier database stays active automatically.
 
 ---
 

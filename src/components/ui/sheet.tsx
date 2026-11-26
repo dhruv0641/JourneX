@@ -26,15 +26,15 @@ export function SheetContent({
     side === 'bottom'
       ? 'inset-x-0 bottom-0 max-h-[88dvh] rounded-t-2xl border-t pb-[calc(1rem+env(safe-area-inset-bottom))]'
       : side === 'left'
-        ? 'inset-y-0 left-0 h-full w-80 max-w-[85vw] border-r'
-        : 'inset-y-0 right-0 h-full w-96 max-w-[92vw] border-l';
+        ? 'inset-y-0 left-0 h-full w-80 max-w-[85vw] border-r motion-safe:data-[state=open]:slide-in-from-left-4'
+        : 'inset-y-0 right-0 h-full w-96 max-w-[92vw] border-l motion-safe:data-[state=open]:slide-in-from-right-4';
 
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px]" />
       <DialogPrimitive.Content
         className={cn(
-          'fixed z-50 overflow-y-auto overscroll-contain border-border bg-card p-5 text-card-foreground shadow-xl focus:outline-none',
+          'fixed z-50 overflow-y-auto overscroll-contain border-border bg-card p-5 text-card-foreground shadow-xl focus:outline-none motion-safe:data-[state=open]:animate-in motion-safe:data-[state=open]:fade-in motion-safe:duration-200',
           positionClass,
           className,
         )}
@@ -52,7 +52,7 @@ export function SheetContent({
           </div>
           <DialogPrimitive.Close
             aria-label="Close panel"
-            className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </DialogPrimitive.Close>

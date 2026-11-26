@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Label } from '@/components/ui/input';
 import { createClient } from '@/lib/supabase/client';
-import { formatDateTimeInZone, getLocalDateKey } from '@/lib/utilities/dates';
+import { formatDateInZone, formatDateTimeInZone, getLocalDateKey } from '@/lib/utilities/dates';
 import {
   createCalendarEvent,
   listCalendarEvents,
@@ -31,7 +31,10 @@ export function CalendarModule({
   const pushToast = useUiStore((s) => s.pushToast);
 
   const [title, setTitle] = useState('');
-  const [startsAt, setStartsAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [startsAt, setStartsAt] = useState(() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  });
   const [reminderMin, setReminderMin] = useState('15');
   const [saving, setSaving] = useState(false);
 
@@ -56,20 +59,29 @@ export function CalendarModule({
     return items.sort((a, b) => a.date.localeCompare(b.date));
   }, [events, tasksData]);
 
+  const todayKey = getLocalDateKey(new Date(), timezone);
+  const monthKey = todayKey.slice(0, 7);
+  const monthStart = new Date(monthKey + '-01T00:00:00Z');
   const monthDays = useMemo(() => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const totalDays = new Date(year, month + 1, 0).getDate();
-    return Array.from({ length: totalDays }, (_, i) => {
-      const d = new Date(year, month, i + 1);
-      const key = getLocalDateKey(d, timezone);
-      const dayItems = upcomingItems.filter(
-        (item) => getLocalDateKey(new Date(item.date), timezone) === key,
-      );
-      return { day: i + 1, key, items: dayItems };
+    const [year, month] = monthKey.split('-').map(Number);
+    const count = new Date(Date.UTC(year!, month!, 0)).getUTCDate();
+    const grouped = new Map<string, typeof upcomingItems>();
+    for (const item of upcomingItems) {
+      const key = getLocalDateKey(new Date(item.date), timezone);
+      const entries = grouped.get(key) ?? [];
+      entries.push(item);
+      grouped.set(key, entries);
+    }
+    return Array.from({ length: count }, (_, index) => {
+      const day = index + 1;
+      const key = monthKey + '-' + String(day).padStart(2, '0');
+      return { day, key, items: grouped.get(key) ?? [] };
     });
-  }, [upcomingItems, timezone]);
+  }, [upcomingItems, timezone, monthKey]);
+  const occupiedDays = monthDays.filter((cell) => cell.items.length);
+  const futureItems = upcomingItems.filter(
+    (item) => getLocalDateKey(new Date(item.date), timezone) >= todayKey,
+  );
 
   async function handleAddEvent(e: React.FormEvent) {
     e.preventDefault();
@@ -113,11 +125,12 @@ export function CalendarModule({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddEvent} className="grid gap-3 sm:grid-cols-12">
-            <div className="sm:col-span-5">
-              <Label htmlFor="cal-title" className="sr-only">
-                Event title
-              </Label>
+          <form
+            onSubmit={handleAddEvent}
+            className="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-12"
+          >
+            <div className="min-w-0 space-y-1 xl:col-span-4">
+              <Label htmlFor="cal-title">Event title</Label>
               <Input
                 id="cal-title"
                 value={title}
@@ -126,8 +139,10 @@ export function CalendarModule({
                 required
               />
             </div>
-            <div className="sm:col-span-3">
+            <div className="min-w-0 space-y-1 xl:col-span-4">
+              <Label htmlFor="cal-start">Start (device time)</Label>
               <Input
+                id="cal-start"
                 type="datetime-local"
                 aria-label="Start date and time"
                 value={startsAt}
@@ -135,8 +150,10 @@ export function CalendarModule({
                 required
               />
             </div>
-            <div className="sm:col-span-2">
+            <div className="min-w-0 space-y-1 xl:col-span-2">
+              <Label htmlFor="cal-reminder">Reminder (minutes before)</Label>
               <Input
+                id="cal-reminder"
                 type="number"
                 min={0}
                 aria-label="Reminder minutes before"
@@ -145,7 +162,7 @@ export function CalendarModule({
                 placeholder="Reminder (min)"
               />
             </div>
-            <Button type="submit" disabled={saving} className="sm:col-span-2">
+            <Button type="submit" disabled={saving} className="min-w-0 space-y-1 xl:col-span-2">
               <Plus className="h-4 w-4" aria-hidden="true" />
               Schedule
             </Button>
@@ -156,10 +173,54 @@ export function CalendarModule({
       <div className="grid gap-6 lg:grid-cols-12">
         <Card className="lg:col-span-8">
           <CardHeader>
-            <CardTitle>This Month</CardTitle>
+            <CardTitle>
+              {formatDateInZone(monthStart, 'UTC', { month: 'long', year: 'numeric' })}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-1.5">
+            <div className="space-y-3 sm:hidden">
+              {occupiedDays.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No events or deadlines this month.</p>
+              ) : (
+                occupiedDays.map((cell) => (
+                  <div
+                    key={cell.key}
+                    className="grid grid-cols-[3rem_1fr] gap-3 border-b border-border pb-3 last:border-0"
+                  >
+                    <time
+                      dateTime={cell.key}
+                      className="self-start rounded-lg bg-muted p-2 text-center text-xs"
+                    >
+                      {formatDateInZone(cell.key + 'T00:00:00Z', 'UTC', { weekday: 'short' })}
+                      <span className="block text-lg font-semibold">{cell.day}</span>
+                    </time>
+                    <ul className="space-y-2">
+                      {cell.items.map((item) => (
+                        <li key={item.kind + item.id} className="break-words text-sm">
+                          <span className="block font-medium">{item.title}</span>
+                          <span className="text-xs capitalize text-muted-foreground">
+                            {item.kind} ·{' '}
+                            {formatDateInZone(item.date, timezone, {
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              )}
+            </div>
+            <div className="hidden grid-cols-7 gap-1.5 sm:grid">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <span key={day} className="text-center text-xs text-muted-foreground">
+                  {day}
+                </span>
+              ))}
+              {Array.from({ length: monthStart.getUTCDay() }, (_, i) => (
+                <span key={'pad' + i} aria-hidden="true" />
+              ))}
               {monthDays.map((cell) => (
                 <div
                   key={cell.key}
@@ -185,15 +246,15 @@ export function CalendarModule({
 
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Upcoming Schedule ({upcomingItems.length})</CardTitle>
+            <CardTitle>Upcoming Schedule ({futureItems.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2.5">
-            {upcomingItems.length === 0 ? (
+            {futureItems.length === 0 ? (
               <p className="text-xs text-muted-foreground">
                 No scheduled events or task deadlines yet.
               </p>
             ) : (
-              upcomingItems.slice(0, 10).map((item) => (
+              futureItems.slice(0, 10).map((item) => (
                 <div key={item.id} className="rounded-md border border-border p-2.5 text-xs">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold">{item.title}</span>

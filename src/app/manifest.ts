@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       'Modular personal operating system for topics, tasks, journaling, calculators, time tracking, and analytics.',
     start_url: '/dashboard',
     display: 'standalone',
-    background_color: '#090d16',
-    theme_color: '#1e40af',
+    background_color: '#f7f3eb',
+    theme_color: '#643450',
     orientation: 'portrait-primary',
     icons: [
       {

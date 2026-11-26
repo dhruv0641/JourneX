@@ -9,6 +9,8 @@ export interface ToastNotice {
 }
 
 interface UiState {
+  soundsEnabled: boolean;
+  setSoundsEnabled: (enabled: boolean) => void;
   sidebarCollapsed: boolean;
   commandPaletteOpen: boolean;
   mobileSheetOpen: boolean;
@@ -27,6 +29,8 @@ interface UiState {
 export const useUiStore = create<UiState>()(
   persist(
     (set) => ({
+      soundsEnabled: false,
+      setSoundsEnabled: (soundsEnabled) => set({ soundsEnabled }),
       sidebarCollapsed: false,
       commandPaletteOpen: false,
       mobileSheetOpen: false,
@@ -54,7 +58,7 @@ export const useUiStore = create<UiState>()(
     }),
     {
       name: 'nexora-ui-v1',
-      partialize: (state) => ({ sidebarCollapsed: state.sidebarCollapsed }),
+      partialize: ({ sidebarCollapsed, soundsEnabled }) => ({ sidebarCollapsed, soundsEnabled }),
     },
   ),
 );

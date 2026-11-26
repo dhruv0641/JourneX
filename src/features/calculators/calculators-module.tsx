@@ -29,11 +29,7 @@ import {
   saveCalculationRun,
 } from '@/services/modules.service';
 import { useUiStore } from '@/stores/ui-store';
-import type {
-  CalculatorDefinitionRow,
-  CalculatorVersionRow,
-  TopicModuleRow,
-} from '@/types/domain';
+import type { CalculatorDefinitionRow, CalculatorVersionRow, TopicModuleRow } from '@/types/domain';
 
 interface InputFieldSchema {
   key: string;
@@ -87,24 +83,24 @@ export function CalculatorsModule({
 
   const parsedInputsSchema = useMemo(
     () =>
-      ((currentVersion?.inputs_schema as unknown as InputFieldSchema[]) ?? [
+      (currentVersion?.inputs_schema as unknown as InputFieldSchema[]) ?? [
         { key: 'a', label: 'Input A', type: 'decimal', unit: '', defaultValue: 10 },
         { key: 'b', label: 'Input B', type: 'decimal', unit: '', defaultValue: 2 },
-      ]),
+      ],
     [currentVersion],
   );
   const parsedOutputsSchema = useMemo(
     () =>
-      ((currentVersion?.outputs_schema as unknown as OutputFieldSchema[]) ?? [
+      (currentVersion?.outputs_schema as unknown as OutputFieldSchema[]) ?? [
         { key: 'result', label: 'Result', unit: '', precision: 2 },
-      ]),
+      ],
     [currentVersion],
   );
   const parsedFormulas = useMemo(
     () =>
-      ((currentVersion?.formulas as unknown as FormulaDefinition[]) ?? [
+      (currentVersion?.formulas as unknown as FormulaDefinition[]) ?? [
         { key: 'result', expression: 'a + b', precision: 2 },
-      ]),
+      ],
     [currentVersion],
   );
 
@@ -149,12 +145,10 @@ export function CalculatorsModule({
 
   const chartData = useMemo(() => {
     const primaryOut = parsedOutputsSchema[0]?.key ?? parsedFormulas[0]?.key ?? 'result';
-    return [...history]
-      .reverse()
-      .map((h, idx) => ({
-        run: h.label || `Run #${idx + 1}`,
-        [primaryOut]: Number((h.outputs as Record<string, unknown>)?.[primaryOut] ?? 0),
-      }));
+    return [...history].reverse().map((h, idx) => ({
+      run: h.label || `Run #${idx + 1}`,
+      [primaryOut]: Number((h.outputs as Record<string, unknown>)?.[primaryOut] ?? 0),
+    }));
   }, [history, parsedOutputsSchema, parsedFormulas]);
 
   async function handleSaveRun() {
@@ -245,25 +239,44 @@ export function CalculatorsModule({
           <CardHeader>
             <CardTitle>Secure Formula &amp; Schema Editor</CardTitle>
             <CardDescription>
-              Allowed operations: `+ - * / % ^`, comparisons, `cond ? a : b`, and functions `abs, round, floor, ceil, min, max, sum, avg, sqrt, pow, log, log10, clamp, pct, if`.
+              Use variable keys in expressions. For example, <code>round(hours * rate, 2)</code>.
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <details className="mb-4 rounded-lg border border-border px-3 text-sm">
+              <summary className="cursor-pointer py-3 font-medium">
+                Supported operations and functions
+              </summary>
+              <p className="pb-3 text-muted-foreground">
+                Arithmetic (+, −, *, /, %, ^), comparisons, conditional expressions (condition ? a :
+                b), and abs, round, floor, ceil, min, max, sum, avg, sqrt, pow, log, log10, clamp,
+                pct, if.
+              </p>
+            </details>
             <form onSubmit={handleSaveCalculatorVersion} className="space-y-4">
               {formulaErr ? (
-                <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
+                <div
+                  role="alert"
+                  className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive"
+                >
                   {formulaErr}
                 </div>
               ) : null}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Calculator Name</Label>
-                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} required />
+                  <Label htmlFor="calc-editor-name">Calculator Name</Label>
+                  <Input
+                    id="calc-editor-name"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label>Version Note</Label>
+                  <Label htmlFor="calc-editor-version">Version Note</Label>
                   <Input
+                    id="calc-editor-version"
                     value={changeNote}
                     onChange={(e) => setChangeNote(e.target.value)}
                     placeholder="e.g., Adjusted weighting formula…"
@@ -296,52 +309,65 @@ export function CalculatorsModule({
                   </Button>
                 </div>
                 {editInputs.map((inp, idx) => (
-                  <div key={idx} className="grid gap-2 sm:grid-cols-12">
-                    <Input
-                      className="sm:col-span-4"
-                      value={inp.label}
-                      aria-label="Input label"
-                      onChange={(e) => {
-                        const copy = [...editInputs];
-                        copy[idx] = {
-                          ...inp,
-                          label: e.target.value,
-                          key: toFieldKey(e.target.value, `input_${idx + 1}`),
-                        };
-                        setEditInputs(copy);
-                      }}
-                    />
-                    <Input
-                      className="font-mono text-xs sm:col-span-3"
-                      value={inp.key}
-                      aria-label="Variable key"
-                      readOnly
-                    />
-                    <Input
-                      className="sm:col-span-2"
-                      value={inp.unit ?? ''}
-                      placeholder="Unit"
-                      onChange={(e) => {
-                        const copy = [...editInputs];
-                        copy[idx] = { ...inp, unit: e.target.value };
-                        setEditInputs(copy);
-                      }}
-                    />
-                    <Input
-                      className="sm:col-span-2"
-                      type="number"
-                      step="any"
-                      value={inp.defaultValue}
-                      onChange={(e) => {
-                        const copy = [...editInputs];
-                        copy[idx] = { ...inp, defaultValue: Number(e.target.value) };
-                        setEditInputs(copy);
-                      }}
-                    />
+                  <div
+                    key={idx}
+                    className="grid items-end gap-2 rounded-xl border border-border p-3 sm:grid-cols-2 xl:grid-cols-12"
+                  >
+                    <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-4">
+                      Input label
+                      <Input
+                        value={inp.label}
+                        aria-label="Input label"
+                        onChange={(e) => {
+                          const copy = [...editInputs];
+                          copy[idx] = {
+                            ...inp,
+                            label: e.target.value,
+                            key: toFieldKey(e.target.value, `input_${idx + 1}`),
+                          };
+                          setEditInputs(copy);
+                        }}
+                      />
+                    </label>
+                    <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-3">
+                      Variable key
+                      <Input
+                        className="font-mono "
+                        value={inp.key}
+                        aria-label="Variable key"
+                        readOnly
+                      />
+                    </label>
+                    <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-2">
+                      Unit
+                      <Input
+                        value={inp.unit ?? ''}
+                        placeholder="Unit"
+                        onChange={(e) => {
+                          const copy = [...editInputs];
+                          copy[idx] = { ...inp, unit: e.target.value };
+                          setEditInputs(copy);
+                        }}
+                      />
+                    </label>
+                    <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-2">
+                      Default value
+                      <Input
+                        type="number"
+                        step="any"
+                        value={inp.defaultValue}
+                        onChange={(e) => {
+                          const copy = [...editInputs];
+                          copy[idx] = { ...inp, defaultValue: Number(e.target.value) };
+                          setEditInputs(copy);
+                        }}
+                      />
+                    </label>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
+                      aria-label={`Remove input ${inp.label}`}
                       onClick={() => setEditInputs((prev) => prev.filter((_, i) => i !== idx))}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
@@ -361,7 +387,12 @@ export function CalculatorsModule({
                       const nextKey = `out_${editOutputs.length + 1}`;
                       setEditOutputs((prev) => [
                         ...prev,
-                        { key: nextKey, label: `Output ${prev.length + 1}`, unit: '', precision: 2 },
+                        {
+                          key: nextKey,
+                          label: `Output ${prev.length + 1}`,
+                          unit: '',
+                          precision: 2,
+                        },
                       ]);
                       setEditFormulas((prev) => [
                         ...prev,
@@ -374,65 +405,82 @@ export function CalculatorsModule({
                   </Button>
                 </div>
                 {editOutputs.map((out, idx) => {
-                  const formula = editFormulas[idx] ?? { key: out.key, expression: '0', precision: 2 };
+                  const formula = editFormulas[idx] ?? {
+                    key: out.key,
+                    expression: '0',
+                    precision: 2,
+                  };
                   return (
-                    <div key={idx} className="grid gap-2 sm:grid-cols-12">
-                      <Input
-                        className="sm:col-span-3"
-                        value={out.label}
-                        onChange={(e) => {
-                          const newKey = toFieldKey(e.target.value, `out_${idx + 1}`);
-                          const copyO = [...editOutputs];
-                          copyO[idx] = { ...out, label: e.target.value, key: newKey };
-                          setEditOutputs(copyO);
-                          const copyF = [...editFormulas];
-                          copyF[idx] = { ...formula, key: newKey };
-                          setEditFormulas(copyF);
-                        }}
-                      />
-                      <Input
-                        className="font-mono text-xs sm:col-span-5"
-                        value={formula.expression}
-                        placeholder="e.g. round((a + b) / 2, 2)"
-                        onChange={(e) => {
-                          const copyF = [...editFormulas];
-                          copyF[idx] = { ...formula, expression: e.target.value };
-                          setEditFormulas(copyF);
-                        }}
-                      />
-                      <Input
-                        className="sm:col-span-2"
-                        value={out.unit ?? ''}
-                        placeholder="Unit"
-                        onChange={(e) => {
-                          const copyO = [...editOutputs];
-                          copyO[idx] = { ...out, unit: e.target.value };
-                          setEditOutputs(copyO);
-                        }}
-                      />
-                      <NativeSelect
-                        className="sm:col-span-1"
-                        value={String(out.precision ?? 2)}
-                        onChange={(e) => {
-                          const p = Number(e.target.value);
-                          const copyO = [...editOutputs];
-                          copyO[idx] = { ...out, precision: p };
-                          setEditOutputs(copyO);
-                          const copyF = [...editFormulas];
-                          copyF[idx] = { ...formula, precision: p };
-                          setEditFormulas(copyF);
-                        }}
-                      >
-                        {[0, 1, 2, 3, 4].map((p) => (
-                          <option key={p} value={p}>
-                            .{p}
-                          </option>
-                        ))}
-                      </NativeSelect>
+                    <div
+                      key={idx}
+                      className="grid items-end gap-2 rounded-xl border border-border p-3 sm:grid-cols-2 xl:grid-cols-12"
+                    >
+                      <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-3">
+                        Output label
+                        <Input
+                          value={out.label}
+                          onChange={(e) => {
+                            const newKey = toFieldKey(e.target.value, `out_${idx + 1}`);
+                            const copyO = [...editOutputs];
+                            copyO[idx] = { ...out, label: e.target.value, key: newKey };
+                            setEditOutputs(copyO);
+                            const copyF = [...editFormulas];
+                            copyF[idx] = { ...formula, key: newKey };
+                            setEditFormulas(copyF);
+                          }}
+                        />
+                      </label>
+                      <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-5">
+                        Formula
+                        <Input
+                          className="font-mono "
+                          value={formula.expression}
+                          placeholder="e.g. round((a + b) / 2, 2)"
+                          onChange={(e) => {
+                            const copyF = [...editFormulas];
+                            copyF[idx] = { ...formula, expression: e.target.value };
+                            setEditFormulas(copyF);
+                          }}
+                        />
+                      </label>
+                      <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-2">
+                        Unit
+                        <Input
+                          value={out.unit ?? ''}
+                          placeholder="Unit"
+                          onChange={(e) => {
+                            const copyO = [...editOutputs];
+                            copyO[idx] = { ...out, unit: e.target.value };
+                            setEditOutputs(copyO);
+                          }}
+                        />
+                      </label>
+                      <label className="grid min-w-0 gap-1 text-sm font-medium xl:col-span-1">
+                        Precision
+                        <NativeSelect
+                          value={String(out.precision ?? 2)}
+                          onChange={(e) => {
+                            const p = Number(e.target.value);
+                            const copyO = [...editOutputs];
+                            copyO[idx] = { ...out, precision: p };
+                            setEditOutputs(copyO);
+                            const copyF = [...editFormulas];
+                            copyF[idx] = { ...formula, precision: p };
+                            setEditFormulas(copyF);
+                          }}
+                        >
+                          {[0, 1, 2, 3, 4].map((p) => (
+                            <option key={p} value={p}>
+                              .{p}
+                            </option>
+                          ))}
+                        </NativeSelect>
+                      </label>
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
+                        aria-label={`Remove output ${out.label}`}
                         disabled={editOutputs.length <= 1}
                         onClick={() => {
                           setEditOutputs((prev) => prev.filter((_, i) => i !== idx));
@@ -528,7 +576,10 @@ export function CalculatorsModule({
                     ))}
                   </div>
                 ) : (
-                  <div role="alert" className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+                  <div
+                    role="alert"
+                    className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+                  >
                     {liveEvaluation.error}
                   </div>
                 )}

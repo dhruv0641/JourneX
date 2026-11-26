@@ -71,7 +71,7 @@ export function AnalyticsChartCard({
   return (
     <section
       aria-label={title}
-      className="rounded-lg border border-border bg-card p-5 text-card-foreground"
+      className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5 text-card-foreground"
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
         <div>
@@ -80,13 +80,14 @@ export function AnalyticsChartCard({
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           {allowTypeSwitch ? (
-            <div className="flex rounded-md border border-border p-0.5">
+            <div className="flex max-w-full flex-wrap rounded-md border border-border p-0.5">
               {(['area', 'bar', 'line', 'donut', 'scatter'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => setChartType(type)}
-                  className={`cursor-pointer rounded px-2 py-1 text-[11px] font-medium capitalize transition-colors ${
+                  aria-pressed={chartType === type}
+                  className={`min-h-11 min-w-11 cursor-pointer rounded px-2 py-1 text-xs font-medium capitalize transition-colors ${
                     chartType === type
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:text-foreground'
@@ -101,6 +102,7 @@ export function AnalyticsChartCard({
             variant={showTable ? 'default' : 'outline'}
             size="sm"
             onClick={() => setShowTable((prev) => !prev)}
+            aria-pressed={showTable}
             aria-label={`Toggle data table for ${title}`}
           >
             <TableIcon className="h-3.5 w-3.5" aria-hidden="true" />

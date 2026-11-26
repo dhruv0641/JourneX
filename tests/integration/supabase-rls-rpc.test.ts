@@ -290,4 +290,17 @@ describe.skipIf(!hasEnv)('Supabase RLS, Auth, Atomic RPCs, OCC & Storage Isolati
       .download(filePath);
     expect(crossDownloadErr).not.toBeNull();
   });
+
+  it('exposes safe health_check RPC to anon while keeping all tables blocked from anon', async () => {
+    const anonClient = createClient<Database>(SUPABASE_URL!, PUBLISHABLE_KEY!, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { data: healthy, error: healthErr } = await anonClient.rpc('health_check');
+    expect(healthErr).toBeNull();
+    expect(healthy).toBe(true);
+
+    const { error: anonTableErr } = await anonClient.from('topic_templates').select('id').limit(1);
+    expect(anonTableErr).not.toBeNull();
+  });
 });

@@ -23,7 +23,8 @@ import type { JournalEntryRow, TopicModuleRow } from '@/types/domain';
 const MOODS = ['Focused', 'Confident', 'Neutral', 'Tired', 'Challenged'];
 const ENTRY_TEMPLATES: Record<string, string> = {
   'Daily Check-in': '<p><strong>Key win today:</strong> </p><p><strong>Focus next:</strong> </p>',
-  'Error & Lesson Log': '<p><strong>What broke / mistake:</strong> </p><p><strong>Root cause & fix:</strong> </p>',
+  'Error & Lesson Log':
+    '<p><strong>What broke / mistake:</strong> </p><p><strong>Root cause & fix:</strong> </p>',
   'Reference Note': '<h3>Summary</h3><p></p><ul><li>Key point 1</li></ul>',
 };
 
@@ -42,6 +43,7 @@ export function JournalModule({
   const pushToast = useUiStore((s) => s.pushToast);
 
   const cfg = (mod.config ?? {}) as { enableMood?: boolean; categories?: string[] };
+  const [mobilePane, setMobilePane] = useState<'write' | 'entries'>('write');
   const [search, setSearch] = useState('');
   const [editingId, setEditingId] = useState<string | undefined>(undefined);
   const [editingVersion, setEditingVersion] = useState<number | undefined>(undefined);
@@ -85,14 +87,27 @@ export function JournalModule({
       }
     }, 3500);
     return () => window.clearTimeout(timer);
-  }, [editingId, htmlBody, title, category, mood, entryDate, editingVersion, userId, topicId, mod.id, cfg.enableMood]);
+  }, [
+    editingId,
+    htmlBody,
+    title,
+    category,
+    mood,
+    entryDate,
+    editingVersion,
+    userId,
+    topicId,
+    mod.id,
+    cfg.enableMood,
+  ]);
 
   function startNew(templateKey?: string) {
+    setMobilePane('write');
     setEditingId(undefined);
     setEditingVersion(undefined);
     setTitle('');
     setEntryDate(new Date().toISOString().slice(0, 10));
-    const initialHtml = templateKey ? ENTRY_TEMPLATES[templateKey] ?? '' : '';
+    const initialHtml = templateKey ? (ENTRY_TEMPLATES[templateKey] ?? '') : '';
     setHtmlBody(initialHtml);
     if (editorRef.current) editorRef.current.innerHTML = initialHtml;
     setAutosaveStatus(null);
@@ -100,6 +115,7 @@ export function JournalModule({
   }
 
   function loadEntry(entry: JournalEntryRow) {
+    setMobilePane('write');
     setEditingId(entry.id);
     setEditingVersion(entry.version);
     setTitle(entry.title);
@@ -162,8 +178,30 @@ export function JournalModule({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-12">
-      <div className="space-y-4 lg:col-span-5">
+    <div className="grid items-start gap-4 lg:grid-cols-12 lg:gap-5">
+      <div
+        role="group"
+        aria-label="Journal view"
+        className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 lg:hidden"
+      >
+        <Button
+          variant={mobilePane === 'write' ? 'outline' : 'ghost'}
+          aria-pressed={mobilePane === 'write'}
+          onClick={() => setMobilePane('write')}
+        >
+          Write
+        </Button>
+        <Button
+          variant={mobilePane === 'entries' ? 'outline' : 'ghost'}
+          aria-pressed={mobilePane === 'entries'}
+          onClick={() => setMobilePane('entries')}
+        >
+          Entries
+        </Button>
+      </div>
+      <div
+        className={`min-w-0 space-y-4 lg:col-span-5 lg:block ${mobilePane === 'entries' ? 'block' : 'hidden'}`}
+      >
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">{mod.name}</h2>
           <Button size="sm" onClick={() => startNew('Daily Check-in')}>
@@ -241,14 +279,18 @@ export function JournalModule({
         )}
       </div>
 
-      <div className="lg:col-span-7">
+      <div
+        className={`min-w-0 lg:col-span-7 lg:block ${mobilePane === 'write' ? 'block' : 'hidden'}`}
+      >
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <CardTitle>{editingId ? 'Edit Entry' : 'New Entry'}</CardTitle>
               <div className="flex items-center gap-2">
                 {autosaveStatus ? (
-                  <span className="text-xs text-muted-foreground">{autosaveStatus}</span>
+                  <span role="status" className="text-xs text-muted-foreground">
+                    {autosaveStatus}
+                  </span>
                 ) : null}
                 <NativeSelect
                   aria-label="Apply journal template"
@@ -331,7 +373,7 @@ export function JournalModule({
                     key={btn.label}
                     type="button"
                     onClick={() => execFormat(btn.cmd, btn.val)}
-                    className="cursor-pointer rounded px-2.5 py-1 text-xs font-medium hover:bg-muted"
+                    className="min-h-11 min-w-11 cursor-pointer rounded px-2.5 py-1 text-sm font-medium hover:bg-muted"
                   >
                     {btn.label}
                   </button>
@@ -344,7 +386,7 @@ export function JournalModule({
                 aria-multiline="true"
                 aria-label="Journal rich text editor"
                 onInput={(e) => setHtmlBody((e.target as HTMLDivElement).innerHTML)}
-                className="min-h-56 bg-background p-3.5 text-sm leading-relaxed focus:outline-none"
+                className="min-h-56 bg-card p-4 text-base leading-relaxed focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
               />
             </div>
 

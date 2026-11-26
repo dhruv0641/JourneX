@@ -11,10 +11,9 @@ export default function OfflinePage() {
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-warning/15 text-warning">
           <WifiOff className="h-6 w-6" aria-hidden="true" />
         </div>
-        <h1 className="text-xl font-bold tracking-tight">You are offline</h1>
+        <h1 className="font-serif text-3xl tracking-tight">You’re offline</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          NEXORA requires an active connection to read or persist authoritative data in Supabase.
-          Reconnect to resume syncing your workspace.
+          Reconnect to open your topics and save changes to your workspace.
         </p>
         <div className="mt-6">
           <Link

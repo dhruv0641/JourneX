@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query';
 import {
   Archive,
+  ArrowLeft,
+  ArrowUpRight,
   CheckSquare,
   Clock,
   FileText,
@@ -18,6 +21,7 @@ import { TopicIcon } from '@/components/shared/topic-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { NativeSelect } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CalendarModule } from '@/features/calendar/calendar-module';
 import { CalculatorsModule } from '@/features/calculators/calculators-module';
@@ -55,11 +59,7 @@ export function TopicWorkspaceClient({
   const { data: bundle = initialBundle, refetch: refetchBundle } = useQuery({
     queryKey: ['topic-detail', initialBundle.topic.slug],
     queryFn: async () => {
-      const fresh = await fetchTopicDetailBySlug(
-        createClient(),
-        userId,
-        initialBundle.topic.slug,
-      );
+      const fresh = await fetchTopicDetailBySlug(createClient(), userId, initialBundle.topic.slug);
       return fresh ?? initialBundle;
     },
     initialData: initialBundle,
@@ -72,8 +72,26 @@ export function TopicWorkspaceClient({
   });
 
   const enabledModules = bundle.modules.filter((m) => m.is_enabled);
-  const defaultTab = initialTab || 'overview';
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const params = useSearchParams();
+  const requested = (params ? params.get('tab') : initialTab) || 'overview';
+  const matched =
+    enabledModules.find((mod) => mod.id === requested || mod.module_key === requested) ??
+    enabledModules.find((mod) => mod.feature_key === requested) ??
+    (requested === 'records'
+      ? enabledModules.find((mod) =>
+          ['custom_tables', 'custom_forms', 'lists', 'expense_tracking'].includes(mod.feature_key),
+        )
+      : undefined);
+  const activeTab = ['overview', 'configure', 'files'].includes(requested)
+    ? requested
+    : (matched?.id ?? 'overview');
+  function setActiveTab(next: string) {
+    if (next === activeTab) return;
+    const url = new URL(window.location.href);
+    if (next === 'overview') url.searchParams.delete('tab');
+    else url.searchParams.set('tab', next);
+    window.history.pushState(null, '', url);
+  }
 
   const chartSeries = analytics.daily_series.map((d) => ({
     day: d.day.slice(5),
@@ -144,14 +162,7 @@ export function TopicWorkspaceClient({
           />
         );
       case 'goals':
-        return (
-          <GoalsModule
-            key={mod.id}
-            userId={userId}
-            topicId={bundle.topic.id}
-            module={mod}
-          />
-        );
+        return <GoalsModule key={mod.id} userId={userId} topicId={bundle.topic.id} module={mod} />;
       case 'habits':
         return (
           <HabitsModule
@@ -187,7 +198,7 @@ export function TopicWorkspaceClient({
           <AnalyticsChartCard
             key={mod.id}
             title={mod.name}
-            subtitle="30-day authoritative PostgreSQL trend"
+            subtitle="Focus time, completed tasks, and entries over the last 30 days"
             data={chartSeries}
             xKey="day"
             series={[
@@ -197,25 +208,48 @@ export function TopicWorkspaceClient({
             ]}
           />
         );
+      case 'activity_logs':
+        return (
+          <Card>
+            <CardContent className="space-y-3 p-5">
+              <h2 className="font-semibold">{mod.name}</h2>
+              <p className="text-sm text-muted-foreground">
+                View the activity feed to log an update or browse this topic’s history.
+              </p>
+              <Link
+                href="/activity"
+                className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-primary"
+              >
+                Open activity feed <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </CardContent>
+          </Card>
+        );
       default:
         return null;
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-4">
+      <Link
+        href="/topics"
+        className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> All topics
+      </Link>
       {/* Topic Header */}
       <div className="flex flex-col justify-between gap-4 rounded-xl border border-border bg-card p-5 sm:flex-row sm:items-center">
-        <div className="flex items-start gap-3.5">
+        <div className="flex min-w-0 items-start gap-3.5">
           <span
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white"
             style={{ backgroundColor: bundle.topic.accent_color }}
           >
             <TopicIcon name={bundle.topic.icon} className="h-6 w-6" />
           </span>
-          <div>
+          <div className="min-w-0 break-words">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+              <h1 className="max-w-full font-serif text-2xl tracking-tight sm:text-3xl">
                 {bundle.topic.name}
               </h1>
               <Badge variant="outline" className="capitalize">
@@ -248,7 +282,24 @@ export function TopicWorkspaceClient({
 
       {/* Topic Workspace Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <NativeSelect
+          className="md:hidden"
+          aria-label="Topic section"
+          value={activeTab}
+          onChange={(event) => setActiveTab(event.target.value)}
+        >
+          <option value="overview">Overview</option>
+          <optgroup label="Modules">
+            {enabledModules.map((mod) => (
+              <option key={mod.id} value={mod.id}>
+                {mod.name}
+              </option>
+            ))}
+          </optgroup>
+          <option value="files">Files</option>
+          <option value="configure">Configure</option>
+        </NativeSelect>
+        <TabsList aria-label="Topic sections" className="hidden md:inline-flex">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           {enabledModules.map((mod) => (
             <TabsTrigger key={mod.id} value={mod.id}>
@@ -261,6 +312,28 @@ export function TopicWorkspaceClient({
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
+          {enabledModules.length > 0 && (
+            <section aria-label="Topic modules" className="space-y-2">
+              <h2 className="text-lg font-semibold">Modules</h2>
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {enabledModules.map((mod) => (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    onClick={() => setActiveTab(mod.id)}
+                    className="flex min-h-12 min-w-0 items-center gap-3 rounded-xl border border-border bg-card px-3 py-2 text-left text-sm font-medium transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    <TopicIcon name={mod.icon} className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="min-w-0 flex-1 break-words">{mod.name}</span>
+                    <ArrowUpRight
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
+                  </button>
+                ))}
+              </div>
+            </section>
+          )}
           {/* Real KPI Row */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
@@ -290,7 +363,8 @@ export function TopicWorkspaceClient({
                 <div>
                   <p className="text-xs text-muted-foreground">Entries &amp; Logs</p>
                   <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {analytics.summary.custom_records_count + analytics.summary.journal_entries_count}
+                    {analytics.summary.custom_records_count +
+                      analytics.summary.journal_entries_count}
                   </p>
                 </div>
                 <FileText className="h-5 w-5 text-primary" aria-hidden="true" />
@@ -311,7 +385,7 @@ export function TopicWorkspaceClient({
 
           <AnalyticsChartCard
             title={`${bundle.topic.name} — 30-Day Activity & Study Trend`}
-            subtitle="Calculated from persisted PostgreSQL sessions, tasks, and custom records"
+            subtitle="Focus time, completed tasks, and entries by day"
             data={chartSeries}
             xKey="day"
             series={[
@@ -320,18 +394,6 @@ export function TopicWorkspaceClient({
               { key: 'records', label: 'Records Logged' },
             ]}
           />
-
-          {/* Quick Module Previews inside Overview */}
-          <div className="space-y-6">
-            {enabledModules
-              .filter((m) => !['charts', 'statistics', 'activity_logs'].includes(m.feature_key))
-              .slice(0, 3)
-              .map((m) => (
-                <div key={m.id} className="rounded-xl border border-border bg-card/50 p-4">
-                  {renderModule(m)}
-                </div>
-              ))}
-          </div>
         </TabsContent>
 
         {enabledModules.map((mod) => (

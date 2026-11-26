@@ -60,14 +60,18 @@ export function AttachmentsModule({
             <Paperclip className="h-4 w-4 text-primary" aria-hidden="true" />
             Private Attachments ({attachments.length})
           </CardTitle>
-          <label className="inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-md bg-primary px-3.5 text-xs font-semibold text-primary-foreground hover:opacity-95">
+          <label className="inline-flex min-h-11 cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring items-center gap-2 rounded-md bg-primary px-3.5 text-xs font-semibold text-primary-foreground hover:opacity-95">
             <Upload className="h-3.5 w-3.5" aria-hidden="true" />
             {uploading ? 'Uploading…' : 'Upload File (max 10 MB)'}
             <input
               type="file"
               className="sr-only"
               disabled={uploading}
-              onChange={(e) => void handleUpload(e.target.files?.[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = '';
+                void handleUpload(file);
+              }}
             />
           </label>
         </div>
@@ -77,7 +81,7 @@ export function AttachmentsModule({
           <EmptyState
             icon={<FileText className="h-5 w-5" aria-hidden="true" />}
             title="No files attached yet"
-            description="Files are stored privately in Supabase Storage and served via short-lived signed URLs."
+            description="Attach a file to keep it with this topic. Each file can be up to 10 MB."
           />
         ) : (
           <div className="divide-y divide-border">
@@ -87,7 +91,7 @@ export function AttachmentsModule({
                 className="flex flex-wrap items-center justify-between gap-2 py-2.5 text-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{att.file_name}</p>
+                  <p className="break-all font-medium">{att.file_name}</p>
                   <p className="text-xs text-muted-foreground tabular-nums">
                     {(att.size_bytes / 1024).toFixed(1)} KB •{' '}
                     {formatDateTimeInZone(att.created_at, timezone)}

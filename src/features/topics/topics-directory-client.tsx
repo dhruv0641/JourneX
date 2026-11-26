@@ -51,8 +51,11 @@ export function TopicsDirectoryClient({
   const queryClient = useQueryClient();
   const pushToast = useUiStore((s) => s.pushToast);
 
-  const [statusFilter, setStatusFilter] = useState<'active' | 'archived' | 'all'>(initialStatusFilter);
+  const [statusFilter, setStatusFilter] = useState<'active' | 'archived' | 'all'>(
+    initialStatusFilter,
+  );
   const [search, setSearch] = useState('');
+  const [collection, setCollection] = useState<'all' | 'pinned' | 'favorites'>('all');
   const [deleteTarget, setDeleteTarget] = useState<TopicRow | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -65,13 +68,15 @@ export function TopicsDirectoryClient({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return topics.filter((t) => {
+      if (collection === 'pinned' && !t.is_pinned) return false;
+      if (collection === 'favorites' && !t.is_favorite) return false;
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (q && !t.name.toLowerCase().includes(q) && !t.category.toLowerCase().includes(q)) {
         return false;
       }
       return true;
     });
-  }, [topics, statusFilter, search]);
+  }, [topics, statusFilter, search, collection]);
 
   async function refreshAll() {
     await Promise.all([
@@ -255,9 +260,9 @@ export function TopicsDirectoryClient({
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Topics &amp; Mini-Apps</h1>
+          <h1 className="font-serif text-3xl tracking-tight sm:text-4xl">Topics &amp; Mini-Apps</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Create, duplicate, configure, archive, and export any number of modular workspaces.
+            Find a topic or create a space for your next project.
           </p>
         </div>
         <Link
@@ -269,49 +274,95 @@ export function TopicsDirectoryClient({
         </Link>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <Input
-            aria-label="Filter topics"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filter topics by name or category…"
-            className="pl-9"
-          />
-        </div>
-        <NativeSelect
-          aria-label="Topic status filter"
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')}
-          className="sm:w-48"
+      <section
+        aria-label="Browse topics"
+        className="space-y-3 rounded-2xl border border-border bg-card p-3 sm:p-4"
+      >
+        <div
+          className="flex flex-wrap items-center gap-1"
+          role="group"
+          aria-label="Topic collection"
         >
-          <option value="active">Active Topics</option>
-          <option value="archived">Archived Topics</option>
-          <option value="all">All Topics</option>
-        </NativeSelect>
-      </div>
+          {(
+            [
+              ['all', 'All topics', Layers],
+              ['pinned', 'Pinned', Pin],
+              ['favorites', 'Favorites', Star],
+            ] as const
+          ).map(([value, label, Icon]) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={collection === value ? 'default' : 'ghost'}
+              aria-pressed={collection === value}
+              onClick={() => setCollection(value)}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              aria-label="Filter topics"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Filter topics by name or category…"
+              className="pl-9"
+            />
+          </div>
+          <NativeSelect
+            aria-label="Topic status filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as 'active' | 'archived' | 'all')}
+            className="sm:w-48"
+          >
+            <option value="active">Active Topics</option>
+            <option value="archived">Archived Topics</option>
+            <option value="all">All Topics</option>
+          </NativeSelect>
+        </div>
+      </section>
 
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Layers className="h-5 w-5" aria-hidden="true" />}
-          title={statusFilter === 'archived' ? 'No archived topics' : 'No topics match this filter'}
-          description="Launch the dynamic topic builder to create a custom study tracker, finance hub, or calculator."
+          title={topics.length ? 'No topics match these filters' : 'Create your first topic'}
+          description={
+            topics.length
+              ? 'Try another collection, status, or search term.'
+              : 'Start with a project or interest, then choose the tools you need.'
+          }
           action={
-            <Link
-              href="/topics/new"
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Create Topic
-            </Link>
+            topics.length ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                  setCollection('all');
+                }}
+              >
+                Clear filters
+              </Button>
+            ) : (
+              <Link
+                href="/topics/new"
+                className="inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                Create Topic
+              </Link>
+            )
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((topic) => (
             <Card key={topic.id} className="flex flex-col justify-between">
               <CardContent className="p-5">
@@ -347,7 +398,7 @@ export function TopicsDirectoryClient({
                 </p>
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-1.5 border-t border-border pt-3">
-                  <div className="flex items-center gap-1">
+                  <div className="flex min-w-0 flex-wrap items-center gap-1">
                     <Button
                       variant="ghost"
                       size="icon"
@@ -356,7 +407,9 @@ export function TopicsDirectoryClient({
                       onClick={() => handleTogglePin(topic)}
                     >
                       <Pin
-                        className={topic.is_pinned ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-muted-foreground'}
+                        className={
+                          topic.is_pinned ? 'h-4 w-4 text-primary' : 'h-4 w-4 text-muted-foreground'
+                        }
                         aria-hidden="true"
                       />
                     </Button>
@@ -368,7 +421,11 @@ export function TopicsDirectoryClient({
                       onClick={() => handleToggleFavorite(topic)}
                     >
                       <Star
-                        className={topic.is_favorite ? 'h-4 w-4 fill-accent text-accent' : 'h-4 w-4 text-muted-foreground'}
+                        className={
+                          topic.is_favorite
+                            ? 'h-4 w-4 fill-accent text-accent'
+                            : 'h-4 w-4 text-muted-foreground'
+                        }
                         aria-hidden="true"
                       />
                     </Button>

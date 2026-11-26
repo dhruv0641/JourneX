@@ -43,18 +43,13 @@ export default async function TopicDetailPage({
   const timezone = bootstrap.profile?.timezone ?? 'UTC';
   const analytics = await fetchTopicAnalyticsSummary(supabase, bundle.topic.id, 30, timezone);
 
-  // Map friendly query tab names (e.g. ?tab=tasks) to matching module ID if present
-  const matchedMod = sp.tab
-    ? bundle.modules.find((m) => m.feature_key.includes(sp.tab!) || m.module_key === sp.tab)
-    : undefined;
-
   return (
     <TopicWorkspaceClient
       userId={claims.userId}
       timezone={timezone}
       initialBundle={bundle}
       initialAnalytics={analytics}
-      initialTab={matchedMod?.id ?? sp.tab}
+      initialTab={sp.tab}
     />
   );
 }

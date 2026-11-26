@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -28,11 +28,7 @@ import {
   getFeatureList,
   getSupportedViewsForModules,
 } from '@/engine/feature-registry/registry';
-import type {
-  CustomFieldDraft,
-  FeatureKey,
-  ViewType,
-} from '@/engine/feature-registry/types';
+import type { CustomFieldDraft, FeatureKey, ViewType } from '@/engine/feature-registry/types';
 import { discoverTopicRequirements } from '@/engine/template-engine/intent-matcher';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utilities/cn';
@@ -42,14 +38,14 @@ import { useUiStore } from '@/stores/ui-store';
 import type { TopicTemplateRow } from '@/types/domain';
 
 const ACCENT_PRESETS = [
-  '#2563EB',
-  '#0D9488',
-  '#7C3AED',
-  '#D97706',
-  '#E11D48',
-  '#0284C7',
-  '#15803D',
-  '#475569',
+  '#643450',
+  '#496F61',
+  '#776399',
+  '#896022',
+  '#A63448',
+  '#426A81',
+  '#336648',
+  '#695A60',
 ];
 
 const CATEGORIES = [
@@ -77,7 +73,13 @@ interface CalcDraft {
   name: string;
   description: string;
   inputs: Array<{ key: string; label: string; type: string; unit: string; defaultValue: number }>;
-  outputs: Array<{ key: string; label: string; unit: string; precision: number; monetary?: boolean }>;
+  outputs: Array<{
+    key: string;
+    label: string;
+    unit: string;
+    precision: number;
+    monetary?: boolean;
+  }>;
   formulas: Array<{ key: string; expression: string; precision: number; monetary?: boolean }>;
 }
 
@@ -98,12 +100,14 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
   const pushToast = useUiStore((s) => s.pushToast);
 
   const [step, setStep] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const [moduleFilter, setModuleFilter] = useState('all');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [purpose, setPurpose] = useState('');
   const [category, setCategory] = useState('general');
   const [icon, setIcon] = useState('layers');
-  const [accentColor, setAccentColor] = useState('#2563EB');
+  const [accentColor, setAccentColor] = useState(ACCENT_PRESETS[0]!);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
   const [modules, setModules] = useState<CreateTopicModuleInput[]>([
@@ -181,9 +185,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
   }
 
   function applyDiscoveryRecommendations() {
-    const matchedTemplate = templates.find(
-      (t) => t.slug === discovery.recommendedTemplateSlug,
-    );
+    const matchedTemplate = templates.find((t) => t.slug === discovery.recommendedTemplateSlug);
     const activeTemplate =
       selectedTemplate && selectedTemplate.slug !== 'blank-topic'
         ? selectedTemplate
@@ -204,10 +206,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
     const templateModules = Array.isArray(templateDef?.modules) ? templateDef.modules : [];
 
     const mergedKeys = Array.from(
-      new Set<FeatureKey>([
-        ...modules.map((m) => m.feature_key),
-        ...discovery.recommendedModules,
-      ]),
+      new Set<FeatureKey>([...modules.map((m) => m.feature_key), ...discovery.recommendedModules]),
     );
 
     const builtModules: CreateTopicModuleInput[] = mergedKeys.map((fkey, idx) => {
@@ -217,7 +216,9 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
 
       if (
         existingMod &&
-        (existingMod.fields?.length || Object.keys(existingMod.config ?? {}).length || activeTemplate)
+        (existingMod.fields?.length ||
+          Object.keys(existingMod.config ?? {}).length ||
+          activeTemplate)
       ) {
         return { ...existingMod, sort_order: idx };
       }
@@ -300,14 +301,46 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
     const defaultFields: CustomFieldDraft[] =
       fkey === 'expense_tracking'
         ? [
-            { field_key: 'entry_type', label: 'Type', field_type: 'dropdown', is_required: true, options: ['income', 'expense'], sort_order: 0 },
-            { field_key: 'amount', label: 'Amount', field_type: 'currency', is_required: true, validation_rules: { min: 0 }, sort_order: 1 },
-            { field_key: 'category', label: 'Category', field_type: 'short_text', is_required: true, sort_order: 2 },
+            {
+              field_key: 'entry_type',
+              label: 'Type',
+              field_type: 'dropdown',
+              is_required: true,
+              options: ['income', 'expense'],
+              sort_order: 0,
+            },
+            {
+              field_key: 'amount',
+              label: 'Amount',
+              field_type: 'currency',
+              is_required: true,
+              validation_rules: { min: 0 },
+              sort_order: 1,
+            },
+            {
+              field_key: 'category',
+              label: 'Category',
+              field_type: 'short_text',
+              is_required: true,
+              sort_order: 2,
+            },
           ]
         : fkey === 'custom_tables' || fkey === 'custom_forms' || fkey === 'lists'
           ? [
-              { field_key: 'item_name', label: 'Item', field_type: 'short_text', is_required: true, sort_order: 0 },
-              { field_key: 'value', label: 'Value', field_type: 'decimal', is_required: false, sort_order: 1 },
+              {
+                field_key: 'item_name',
+                label: 'Item',
+                field_type: 'short_text',
+                is_required: true,
+                sort_order: 0,
+              },
+              {
+                field_key: 'value',
+                label: 'Value',
+                field_type: 'decimal',
+                is_required: false,
+                sort_order: 1,
+              },
             ]
           : [];
 
@@ -336,9 +369,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
   }
 
   function updateModuleFields(moduleKey: string, fields: CustomFieldDraft[]) {
-    setModules((prev) =>
-      prev.map((m) => (m.module_key === moduleKey ? { ...m, fields } : m)),
-    );
+    setModules((prev) => prev.map((m) => (m.module_key === moduleKey ? { ...m, fields } : m)));
   }
 
   function updateCalculatorConfig(moduleKey: string, calc: Record<string, unknown>) {
@@ -390,11 +421,13 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
       const err = validateStep(next);
       if (err) {
         setValidationError(err);
+        requestAnimationFrame(() => document.getElementById('builder-error')?.focus());
         return;
       }
     }
     setValidationError(null);
     setStep(next);
+    requestAnimationFrame(() => headingRef.current?.focus());
   }
 
   async function handlePublish() {
@@ -449,21 +482,47 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+      <div className="space-y-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dynamic Topic Builder</h1>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="scroll-mt-24 font-serif text-3xl tracking-tight outline-none sm:text-4xl"
+          >
+            Dynamic Topic Builder
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Compose an independent mini-application tailored to your workflow without writing code.
+            Name your topic, choose its tools, and preview it before creating it.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <label className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 sm:hidden">
+          <span className="text-sm font-semibold">
+            Step {step} of {STEPS.length}
+          </span>
+          <NativeSelect
+            aria-label="Builder step"
+            className="w-auto min-w-0 flex-1"
+            value={step}
+            disabled={submitting}
+            onChange={(event) => goToStep(Number(event.target.value))}
+          >
+            {STEPS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </label>
+        <nav aria-label="Builder steps" className="hidden flex-wrap items-center gap-1.5 sm:flex">
           {STEPS.map((s) => (
             <button
               key={s.id}
               type="button"
+              disabled={submitting}
+              aria-current={step === s.id ? 'step' : undefined}
               onClick={() => goToStep(s.id)}
               className={cn(
-                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors',
+                'inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md border px-2.5 text-xs font-medium transition-colors',
                 step === s.id
                   ? 'border-primary bg-primary text-primary-foreground'
                   : s.id < step
@@ -475,13 +534,15 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
               <span>{s.label}</span>
             </button>
           ))}
-        </div>
+        </nav>
       </div>
 
       {validationError ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          id="builder-error"
+          tabIndex={-1}
+          className="scroll-mt-24 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
         >
           {validationError}
         </div>
@@ -531,10 +592,11 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                       <button
                         key={hex}
                         type="button"
+                        aria-pressed={accentColor.toUpperCase() === hex}
                         aria-label={`Select accent color ${hex}`}
                         onClick={() => setAccentColor(hex)}
                         className={cn(
-                          'h-8 w-8 cursor-pointer rounded-full border-2 transition-transform',
+                          'size-11 cursor-pointer rounded-full border-2 motion-safe:transition-transform',
                           accentColor.toUpperCase() === hex
                             ? 'scale-110 border-foreground'
                             : 'border-transparent',
@@ -578,10 +640,11 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                       <button
                         key={iconKey}
                         type="button"
+                        aria-pressed={icon === iconKey}
                         aria-label={`Icon ${iconKey}`}
                         onClick={() => setIcon(iconKey)}
                         className={cn(
-                          'flex h-10 w-10 cursor-pointer items-center justify-center rounded-md border transition-colors',
+                          'flex size-11 cursor-pointer items-center justify-center rounded-md border transition-colors',
                           icon === iconKey
                             ? 'border-primary bg-primary/10 text-primary'
                             : 'border-border bg-card text-muted-foreground hover:bg-muted',
@@ -641,10 +704,10 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
-              Step 2 — Deterministic Requirement Discovery
+              Step 2 — Suggested setup
             </CardTitle>
             <CardDescription>
-              Analyzes your topic name, category, template, and description without external paid APIs.
+              Review the tools suggested for your topic. You can adjust them in the next step.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -668,9 +731,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                     <span className="text-sm font-semibold">Generic Modular Workspace</span>
                   )}
                 </div>
-                <Button onClick={applyDiscoveryRecommendations}>
-                  Apply Recommended Setup
-                </Button>
+                <Button onClick={applyDiscoveryRecommendations}>Apply Recommended Setup</Button>
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{discovery.explanation}</p>
               {discovery.detectedKeywords.length > 0 ? (
@@ -705,64 +766,94 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
             <CardHeader>
               <CardTitle>Step 3 — Select Modules ({modules.length} enabled)</CardTitle>
               <CardDescription>
-                Toggle capabilities or add multiple instances of repeatable modules inside this topic.
+                Choose the tools you’ll use. Some modules can be added more than once.
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {getFeatureList().map((feat) => {
-                const count = modules.filter((m) => m.feature_key === feat.key).length;
-                const enabled = count > 0;
-                return (
-                  <div
-                    key={feat.key}
-                    className={cn(
-                      'flex flex-col justify-between rounded-lg border p-4 transition-colors',
-                      enabled ? 'border-primary bg-primary/5' : 'border-border bg-card',
-                    )}
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
-                            <TopicIcon name={feat.icon} className="h-4 w-4" />
-                          </span>
-                          <div>
-                            <h3 className="text-sm font-semibold">{feat.name}</h3>
-                            <span className="text-[11px] capitalize text-muted-foreground">
-                              {feat.category}
-                            </span>
-                          </div>
-                        </div>
-                        {enabled ? <Badge variant="primary">{count}x</Badge> : null}
-                      </div>
-                      <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-                        {feat.description}
-                      </p>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2">
-                      <Button
-                        variant={enabled ? 'outline' : 'default'}
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => toggleFeatureModule(feat.key)}
+            <CardContent className="space-y-4">
+              <NativeSelect
+                aria-label="Filter modules"
+                className="sm:max-w-64"
+                value={moduleFilter}
+                onChange={(event) => setModuleFilter(event.target.value)}
+              >
+                <option value="all">All modules</option>
+                <option value="recommended">Recommended for this topic</option>
+                <option value="enabled">Enabled modules ({modules.length})</option>
+              </NativeSelect>
+              {moduleFilter === 'enabled' && modules.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No modules enabled. Choose “All modules” to add one.
+                </p>
+              )}
+              {moduleFilter === 'recommended' && !discovery.recommendedModules.length && (
+                <p className="text-sm text-muted-foreground">
+                  No recommendations for this topic yet. Explore all modules to choose one.
+                </p>
+              )}
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {getFeatureList()
+                  .filter((feat) => {
+                    if (moduleFilter === 'recommended')
+                      return discovery.recommendedModules.includes(feat.key);
+                    if (moduleFilter === 'enabled')
+                      return modules.some((mod) => mod.feature_key === feat.key);
+                    return true;
+                  })
+                  .map((feat) => {
+                    const count = modules.filter((m) => m.feature_key === feat.key).length;
+                    const enabled = count > 0;
+                    return (
+                      <div
+                        key={feat.key}
+                        className={cn(
+                          'flex flex-col justify-between rounded-lg border p-4 transition-colors',
+                          enabled ? 'border-primary bg-primary/5' : 'border-border bg-card',
+                        )}
                       >
-                        {enabled ? 'Remove' : 'Enable'}
-                      </Button>
-                      {enabled && feat.allowMultiple ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addModuleInstance(feat.key)}
-                          title={`Add another ${feat.name} instance`}
-                        >
-                          <CopyPlus className="h-3.5 w-3.5" aria-hidden="true" />
-                          Add
-                        </Button>
-                      ) : null}
-                    </div>
-                  </div>
-                );
-              })}
+                        <div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-foreground">
+                                <TopicIcon name={feat.icon} className="h-4 w-4" />
+                              </span>
+                              <div>
+                                <h3 className="text-sm font-semibold">{feat.name}</h3>
+                                <span className="text-[11px] capitalize text-muted-foreground">
+                                  {feat.category}
+                                </span>
+                              </div>
+                            </div>
+                            {enabled ? <Badge variant="primary">{count}x</Badge> : null}
+                          </div>
+                          <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
+                            {feat.description}
+                          </p>
+                        </div>
+                        <div className="mt-4 flex items-center gap-2">
+                          <Button
+                            variant={enabled ? 'outline' : 'default'}
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => toggleFeatureModule(feat.key)}
+                          >
+                            {enabled ? 'Remove' : 'Enable'}
+                          </Button>
+                          {enabled && feat.allowMultiple ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => addModuleInstance(feat.key)}
+                              title={`Add another ${feat.name} instance`}
+                            >
+                              <CopyPlus className="h-3.5 w-3.5" aria-hidden="true" />
+                              Add
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -781,9 +872,26 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
             const calc = mod.config?.calculator as
               | {
                   name?: string;
-                  inputs_schema?: Array<{ key: string; label: string; type: string; unit?: string; defaultValue: number }>;
-                  outputs_schema?: Array<{ key: string; label: string; unit?: string; precision: number; monetary?: boolean }>;
-                  formulas?: Array<{ key: string; expression: string; precision: number; monetary?: boolean }>;
+                  inputs_schema?: Array<{
+                    key: string;
+                    label: string;
+                    type: string;
+                    unit?: string;
+                    defaultValue: number;
+                  }>;
+                  outputs_schema?: Array<{
+                    key: string;
+                    label: string;
+                    unit?: string;
+                    precision: number;
+                    monetary?: boolean;
+                  }>;
+                  formulas?: Array<{
+                    key: string;
+                    expression: string;
+                    precision: number;
+                    monetary?: boolean;
+                  }>;
                 }
               | undefined;
 
@@ -939,7 +1047,8 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                             <Label className="text-xs">
                               {field.field_type === 'formula'
                                 ? 'Formula'
-                                : field.field_type === 'dropdown' || field.field_type === 'multi_select'
+                                : field.field_type === 'dropdown' ||
+                                    field.field_type === 'multi_select'
                                   ? 'Options (comma-separated)'
                                   : 'Required'}
                             </Label>
@@ -954,7 +1063,8 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                                   updateModuleFields(mod.module_key, updated);
                                 }}
                               />
-                            ) : field.field_type === 'dropdown' || field.field_type === 'multi_select' ? (
+                            ) : field.field_type === 'dropdown' ||
+                              field.field_type === 'multi_select' ? (
                               <Input
                                 value={(field.options ?? []).join(', ')}
                                 placeholder="Option 1, Option 2"
@@ -1007,14 +1117,19 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
 
                   {mod.feature_key === 'calculators' && calc ? (
                     <div className="space-y-3 border-t border-border pt-4">
-                      <h4 className="text-sm font-semibold">Initial Calculator Formula Configuration</h4>
+                      <h4 className="text-sm font-semibold">
+                        Initial Calculator Formula Configuration
+                      </h4>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1">
                           <Label className="text-xs">Calculator Title</Label>
                           <Input
                             value={calc.name ?? mod.name}
                             onChange={(e) =>
-                              updateCalculatorConfig(mod.module_key, { ...calc, name: e.target.value })
+                              updateCalculatorConfig(mod.module_key, {
+                                ...calc,
+                                name: e.target.value,
+                              })
                             }
                           />
                         </div>
@@ -1043,7 +1158,8 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Inputs available: {(calc.inputs_schema ?? []).map((i) => i.key).join(', ')}.
-                        You can add more inputs, outputs, and formula versions inside the topic anytime.
+                        You can add more inputs, outputs, and formula versions inside the topic
+                        anytime.
                       </p>
                     </div>
                   ) : null}
@@ -1085,7 +1201,11 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                       }
                     }}
                   >
-                    {active ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : <Plus className="h-3.5 w-3.5" aria-hidden="true" />}
+                    {active ? (
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                    )}
                     {v.label}
                   </Button>
                 );
@@ -1116,9 +1236,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
                       variant={view.is_default ? 'default' : 'outline'}
                       size="sm"
                       onClick={() =>
-                        setViews((prev) =>
-                          prev.map((x, i) => ({ ...x, is_default: i === idx })),
-                        )
+                        setViews((prev) => prev.map((x, i) => ({ ...x, is_default: i === idx })))
                       }
                     >
                       {view.is_default ? 'Default' : 'Set Default'}
@@ -1221,7 +1339,7 @@ export function TopicBuilderWizard({ templates }: { templates: TopicTemplateRow[
       ) : null}
 
       {/* Wizard Footer Controls */}
-      <div className="flex items-center justify-between border-t border-border pt-4">
+      <div className="sticky bottom-[calc(5rem+env(safe-area-inset-bottom))] z-10 flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-2 shadow-sm lg:bottom-3">
         <Button
           variant="outline"
           disabled={step === 1 || submitting}

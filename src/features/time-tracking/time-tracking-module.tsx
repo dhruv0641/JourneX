@@ -39,6 +39,7 @@ export function TimeTrackingModule({
   const queryClient = useQueryClient();
   const pushToast = useUiStore((s) => s.pushToast);
 
+  const [captureMode, setCaptureMode] = useState<'timer' | 'manual'>('timer');
   const [description, setDescription] = useState('');
   const [manualDesc, setManualDesc] = useState('');
   const [manualMin, setManualMin] = useState('30');
@@ -50,9 +51,7 @@ export function TimeTrackingModule({
     queryFn: () => listTimeSessions(createClient(), userId, topicId),
   });
 
-  const activeSession = sessions.find(
-    (s) => s.status === 'running' || s.status === 'paused',
-  );
+  const activeSession = sessions.find((s) => s.status === 'running' || s.status === 'paused');
 
   useEffect(() => {
     if (!activeSession || activeSession.status !== 'running') return;
@@ -157,22 +156,42 @@ export function TimeTrackingModule({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+      <div
+        role="group"
+        aria-label="Time entry method"
+        className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1 lg:hidden"
+      >
+        <Button
+          variant={captureMode === 'timer' ? 'outline' : 'ghost'}
+          aria-pressed={captureMode === 'timer'}
+          onClick={() => setCaptureMode('timer')}
+        >
+          Live timer
+        </Button>
+        <Button
+          variant={captureMode === 'manual' ? 'outline' : 'ghost'}
+          aria-pressed={captureMode === 'manual'}
+          onClick={() => setCaptureMode('manual')}
+        >
+          Manual entry
+        </Button>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <Card className={`lg:block ${captureMode === 'timer' ? 'block' : 'hidden'}`}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Synced Focus Timer</CardTitle>
+              <CardTitle>Focus timer</CardTitle>
               <Badge variant="primary" className="tabular-nums">
                 Total: {formatDurationSeconds(totalTopicSeconds)}
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex flex-col items-center justify-center rounded-lg border border-border bg-muted/40 py-6">
-              <span className="font-mono text-4xl font-bold tracking-tight tabular-nums">
+            <div className="flex min-h-36 flex-col items-center justify-center rounded-2xl bg-primary p-4 text-center text-primary-foreground">
+              <span className="font-mono text-[clamp(1.8rem,6vw,3.1rem)] font-medium leading-tight tracking-tight tabular-nums">
                 {formatTimerClock(elapsed)}
               </span>
-              <span className="mt-1 text-xs text-muted-foreground">
+              <span className="mt-1 max-w-full break-words text-sm text-primary-foreground">
                 {activeSession
                   ? `${activeSession.description || 'Active session'} (${activeSession.status})`
                   : 'Ready to start'}
@@ -185,9 +204,7 @@ export function TimeTrackingModule({
                   className="flex-1"
                   disabled={busy}
                   onClick={() =>
-                    void handleTransition(
-                      activeSession.status === 'running' ? 'pause' : 'resume',
-                    )
+                    void handleTransition(activeSession.status === 'running' ? 'pause' : 'resume')
                   }
                 >
                   {activeSession.status === 'running' ? (
@@ -229,9 +246,9 @@ export function TimeTrackingModule({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={`lg:block ${captureMode === 'manual' ? 'block' : 'hidden'}`}>
           <CardHeader>
-            <CardTitle>Log Manual Session</CardTitle>
+            <CardTitle>Manual entry</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleManualLog} className="space-y-3">

@@ -399,75 +399,46 @@ export function GlobalDashboardClient({
     switch (widgetType) {
       case 'kpis':
         return (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Active / Archived Topics
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 xl:grid-cols-4">
+            {[
+              {
+                label: 'Active topics',
+                icon: Layers,
+                value: summary.counts.active_topics,
+                detail: `${summary.counts.archived_topics} archived`,
+              },
+              {
+                label: 'Tasks today',
+                icon: CheckSquare,
+                value: summary.counts.tasks_today,
+                detail: `${summary.counts.tasks_pending} pending · ${summary.counts.tasks_overdue} overdue`,
+              },
+              {
+                label: 'Focus today',
+                icon: Clock,
+                value: formatDurationSeconds(summary.counts.seconds_tracked_today),
+                detail: `7d: ${formatDurationSeconds(summary.counts.seconds_tracked_week)} · 30d: ${formatDurationSeconds(summary.counts.seconds_tracked_month)}`,
+              },
+              {
+                label: 'Tasks completed',
+                icon: CalendarClock,
+                value: summary.counts.tasks_completed,
+                detail: `${summary.counts.goals_avg_progress}% average goal progress`,
+              },
+            ].map(({ label, icon: Icon, value, detail }) => (
+              <Card key={label}>
+                <CardContent className="flex h-full flex-col items-start gap-1 p-3.5 sm:p-5">
+                  <Icon size={18} className="mb-1.5 text-accent" aria-hidden="true" />
+                  <p className="text-xs font-semibold text-muted-foreground">{label}</p>
+                  <p className="break-words font-serif text-[clamp(1.4rem,3vw,2.2rem)] leading-tight tabular-nums">
+                    {value}
                   </p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {summary.counts.active_topics}
-                    <span className="ml-1.5 text-sm font-normal text-muted-foreground">
-                      / {summary.counts.archived_topics}
-                    </span>
+                  <p className="mt-auto pt-1 text-xs leading-relaxed text-muted-foreground">
+                    {detail}
                   </p>
-                </div>
-                <Layers className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Tasks (Today / Pending / Overdue)
-                  </p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {summary.counts.tasks_today} / {summary.counts.tasks_pending}
-                    <span className="ml-1.5 text-sm font-semibold text-destructive">
-                      ({summary.counts.tasks_overdue})
-                    </span>
-                  </p>
-                </div>
-                <CheckSquare className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Focus Time (Today / 7d / 30d)
-                  </p>
-                  <p className="mt-1 font-mono text-xl font-bold tabular-nums">
-                    {formatDurationSeconds(summary.counts.seconds_tracked_today)}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground tabular-nums">
-                    7d: {formatDurationSeconds(summary.counts.seconds_tracked_week)} • 30d:{' '}
-                    {formatDurationSeconds(summary.counts.seconds_tracked_month)}
-                  </p>
-                </div>
-                <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Completed Tasks &amp; Goal Progress
-                  </p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {summary.counts.tasks_completed}
-                    <span className="ml-2 text-sm font-semibold text-success">
-                      {summary.counts.goals_avg_progress}% goals
-                    </span>
-                  </p>
-                </div>
-                <CalendarClock className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         );
 
@@ -656,24 +627,14 @@ export function GlobalDashboardClient({
 
   return (
     <div className="min-w-0 space-y-6">
-      <div className="relative overflow-hidden rounded-3xl border border-primary/15 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm sm:p-7">
-        <div
-          className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-primary/10 blur-3xl"
-          aria-hidden="true"
-        />
-        <div className="relative">
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-primary">
-            Your workspace at a glance
-          </p>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {appName} Command Center
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            See what needs attention, keep your momentum, and jump back into your topics.
-          </p>
-        </div>
-
-        <div className="relative mt-5 flex flex-wrap items-center gap-2">
+      <section className="border-b border-border pb-5">
+        <p className="desk-dateline mb-1" translate="no">
+          {appName}
+        </p>
+        <h1 className="break-words font-serif text-3xl tracking-tight text-foreground sm:text-5xl">
+          Workspace review
+        </h1>
+        <div className="mt-5 grid grid-cols-2 items-center gap-2 sm:flex sm:flex-wrap">
           <NativeSelect
             aria-label="Global date range"
             value={String(days)}
@@ -688,10 +649,12 @@ export function GlobalDashboardClient({
           <Button
             variant={customizing ? 'default' : 'outline'}
             size="touch"
+            aria-pressed={customizing}
+            aria-label={customizing ? 'Finish customizing widgets' : 'Customize widgets'}
             onClick={() => setCustomizing((prev) => !prev)}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-            {customizing ? 'Done' : 'Customize Widgets'}
+            {customizing ? 'Done' : 'Customize'}
           </Button>
           {customizing ? (
             <Button variant="ghost" size="sm" onClick={() => void persistWidgets(DEFAULT_WIDGETS)}>
@@ -701,13 +664,13 @@ export function GlobalDashboardClient({
           ) : null}
           <Link
             href="/topics/new"
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="hidden min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-[transform,box-shadow] motion-safe:hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New Topic
           </Link>
         </div>
-      </div>
+      </section>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={widgets.map((w) => w.id)} strategy={verticalListSortingStrategy}>

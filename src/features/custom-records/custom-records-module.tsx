@@ -10,15 +10,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import {
-  ArrowUpDown,
-  Download,
-  Plus,
-  Search,
-  Table2,
-  Trash2,
-  Upload,
-} from 'lucide-react';
+import { ArrowUpDown, Download, Plus, Search, Table2, Trash2, Upload } from 'lucide-react';
 import { EmptyState } from '@/components/shared/state-views';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -142,9 +134,7 @@ export function CustomRecordsModule({
         accessorKey: 'title',
         header: 'Title',
         cell: ({ row }) => (
-          <span className="font-medium text-foreground">
-            {row.original.title || '—'}
-          </span>
+          <span className="font-medium text-foreground">{row.original.title || '—'}</span>
         ),
       },
       ...visibleFields.map<ColumnDef<CustomRecordRow>>((f) => ({
@@ -153,16 +143,24 @@ export function CustomRecordsModule({
         header: f.label,
         cell: ({ row }) => {
           const val = (row.original.data as Record<string, unknown>)?.[f.field_key];
-          if (val === null || val === undefined || val === '') return <span className="text-muted-foreground">—</span>;
+          if (val === null || val === undefined || val === '')
+            return <span className="text-muted-foreground">—</span>;
           if (Array.isArray(val)) return <span className="text-xs">{val.join(', ')}</span>;
-          if (typeof val === 'boolean') return <Badge variant={val ? 'success' : 'outline'}>{val ? 'Yes' : 'No'}</Badge>;
+          if (typeof val === 'boolean')
+            return <Badge variant={val ? 'success' : 'outline'}>{val ? 'Yes' : 'No'}</Badge>;
           if (f.field_type === 'currency') {
-            return <span className="font-mono text-xs tabular-nums">${Number(val).toFixed(2)}</span>;
+            return (
+              <span className="font-mono text-xs tabular-nums">${Number(val).toFixed(2)}</span>
+            );
           }
           if (f.field_type === 'percentage') {
             return <span className="font-mono text-xs tabular-nums">{Number(val)}%</span>;
           }
-          if (f.field_type === 'integer' || f.field_type === 'decimal' || f.field_type === 'formula') {
+          if (
+            f.field_type === 'integer' ||
+            f.field_type === 'decimal' ||
+            f.field_type === 'formula'
+          ) {
             return <span className="font-mono text-xs tabular-nums">{String(val)}</span>;
           }
           return <span className="text-xs">{String(val)}</span>;
@@ -228,10 +226,7 @@ export function CustomRecordsModule({
     try {
       const derivedTitle =
         recordTitle.trim() ||
-        String(
-          validation.normalizedData[fieldDrafts[0]?.field_key ?? ''] ??
-            `${mod.name} Entry`,
-        );
+        String(validation.normalizedData[fieldDrafts[0]?.field_key ?? ''] ?? `${mod.name} Entry`);
 
       await createCustomRecord(createClient(), userId, {
         topic_id: topicId,
@@ -262,7 +257,7 @@ export function CustomRecordsModule({
       r.title,
       ...fieldDrafts.map((f) => {
         const val = (r.data as Record<string, unknown>)?.[f.field_key];
-        return Array.isArray(val) ? val.join('; ') : val ?? '';
+        return Array.isArray(val) ? val.join('; ') : (val ?? '');
       }),
       r.occurred_at,
     ]);
@@ -358,7 +353,9 @@ export function CustomRecordsModule({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">{mod.name}</h2>
-          <p className="text-xs text-muted-foreground tabular-nums">{total} record(s)</p>
+          <p className="text-xs text-muted-foreground tabular-nums">
+            {total} {total === 1 ? 'record' : 'records'}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
@@ -445,7 +442,7 @@ export function CustomRecordsModule({
                       <button
                         type="button"
                         onClick={header.column.getToggleSortingHandler()}
-                        className="inline-flex cursor-pointer items-center gap-1 hover:text-foreground"
+                        className="inline-flex min-h-11 cursor-pointer items-center gap-1 hover:text-foreground"
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
@@ -474,7 +471,12 @@ export function CustomRecordsModule({
 
       {total > 25 ? (
         <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
             Previous
           </Button>
           <span className="text-xs text-muted-foreground tabular-nums">Page {page}</span>
@@ -491,7 +493,10 @@ export function CustomRecordsModule({
 
       {/* Create Record Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent title={`Add ${mod.name} Entry`} description="All fields are validated before persistence.">
+        <DialogContent
+          title={`Add ${mod.name} Entry`}
+          description="All fields are validated before persistence."
+        >
           <form onSubmit={handleCreateSubmit} className="space-y-3.5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1">
@@ -558,9 +563,14 @@ export function CustomRecordsModule({
                     <Input
                       id={`fld-${f.field_key}`}
                       type={
-                        ['integer', 'decimal', 'currency', 'percentage', 'duration', 'rating'].includes(
-                          f.field_type,
-                        )
+                        [
+                          'integer',
+                          'decimal',
+                          'currency',
+                          'percentage',
+                          'duration',
+                          'rating',
+                        ].includes(f.field_type)
                           ? 'number'
                           : f.field_type === 'date'
                             ? 'date'
@@ -571,7 +581,9 @@ export function CustomRecordsModule({
                                 : 'text'
                       }
                       step={
-                        ['decimal', 'currency', 'percentage'].includes(f.field_type) ? 'any' : undefined
+                        ['decimal', 'currency', 'percentage'].includes(f.field_type)
+                          ? 'any'
+                          : undefined
                       }
                       value={String(val)}
                       onChange={(e) => setVal(e.target.value)}
@@ -619,14 +631,14 @@ export function CustomRecordsModule({
                   </h4>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {csvHeaders.map((h) => (
-                      <div key={h} className="flex items-center gap-2">
-                        <span className="w-32 truncate text-xs font-medium">{h}</span>
+                      <label key={h} className="grid min-w-0 gap-1">
+                        <span className="break-words text-sm font-medium">{h}</span>
                         <NativeSelect
                           value={columnMap[h] ?? ''}
                           onChange={(e) =>
                             setColumnMap((prev) => ({ ...prev, [h]: e.target.value }))
                           }
-                          className="min-h-8 text-xs"
+                          className="min-h-11"
                         >
                           <option value="">Ignore column</option>
                           {fieldDrafts.map((f) => (
@@ -635,15 +647,17 @@ export function CustomRecordsModule({
                             </option>
                           ))}
                         </NativeSelect>
-                      </div>
+                      </label>
                     ))}
                   </div>
                 </div>
 
                 <div className="rounded-md border border-border bg-muted/40 p-3 text-xs">
                   <p>
-                    Ready to import: <strong>{importPreview.validRows.length}</strong> valid row(s) •{' '}
-                    <strong className="text-destructive">{importPreview.invalidRows.length}</strong> invalid row(s)
+                    Ready to import: <strong>{importPreview.validRows.length}</strong> valid row(s)
+                    •{' '}
+                    <strong className="text-destructive">{importPreview.invalidRows.length}</strong>{' '}
+                    invalid row(s)
                   </p>
                   {importPreview.invalidRows.slice(0, 3).map((err) => (
                     <p key={err.rowNum} className="mt-1 text-destructive">

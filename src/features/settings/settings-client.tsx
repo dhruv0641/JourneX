@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useTheme } from 'next-themes';
 import { Download, Loader2, Save, Upload } from 'lucide-react';
 import { ConflictBanner } from '@/components/shared/state-views';
+import { WorkspaceSoundSetting } from '@/components/shared/workspace-sounds';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, Label, NativeSelect } from '@/components/ui/input';
@@ -160,7 +161,7 @@ export function SettingsClient({
           purpose: parsed.purpose ?? '',
           category: parsed.category ?? 'custom',
           icon: parsed.icon ?? 'layers',
-          accent_color: parsed.accent_color ?? '#2563EB',
+          accent_color: parsed.accent_color ?? '#643450',
           modules: parsed.modules,
           views: Array.isArray(parsed.views)
             ? parsed.views
@@ -187,39 +188,41 @@ export function SettingsClient({
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Profile &amp; Workspace Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Configure your operating system name, timezone, appearance, and full data portability.
-        </p>
-      </div>
-
-      {conflictMsg ? (
+    <div className="mx-auto max-w-5xl space-y-6">
+      <header className="border-b border-border pb-5">
+        <h1 className="font-serif text-4xl tracking-tight">Settings</h1>
+        <p className="mt-2 break-words text-sm text-muted-foreground">{email}</p>
+      </header>
+      {conflictMsg && (
         <ConflictBanner message={conflictMsg} onReload={() => window.location.reload()} />
-      ) : null}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Operating System Preferences</CardTitle>
-            <CardDescription>
-              Saved persistently in your PostgreSQL workspace profile and preferences.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSaveSettings} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="appName">Application Name</Label>
-                  <Input
-                    id="appName"
-                    value={appName}
-                    onChange={(e) => setAppName(e.target.value)}
-                    maxLength={40}
-                    required
-                  />
-                </div>
+      )}
+      <div className="grid items-start gap-5 lg:grid-cols-[11rem_minmax(0,1fr)] lg:gap-8">
+        <nav
+          aria-label="Settings sections"
+          className="flex flex-wrap gap-1.5 lg:sticky lg:top-24 lg:flex-col"
+        >
+          {[
+            ['settings-profile', 'Profile'],
+            ['settings-workspace', 'Workspace'],
+            ['settings-device', 'Device'],
+            ['settings-data', 'Backups'],
+          ].map(([id, label]) => (
+            <a
+              href={`#${id}`}
+              key={id}
+              className="inline-flex min-h-11 items-center rounded-xl border border-border bg-card px-3 text-sm font-medium hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+        <div className="min-w-0 space-y-5">
+          <form onSubmit={handleSaveSettings} className="space-y-5">
+            <Card id="settings-profile" className="scroll-mt-24">
+              <CardHeader>
+                <CardTitle>Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="fullName">Owner Name</Label>
                   <Input
@@ -233,116 +236,139 @@ export function SettingsClient({
                   <Label htmlFor="emailField">Account Email</Label>
                   <Input id="emailField" value={email} disabled />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <NativeSelect
-                    id="timezone"
-                    value={timezone}
-                    onChange={(e) => setTimezone(e.target.value)}
-                  >
-                    {TIMEZONES.map((tz) => (
-                      <option key={tz} value={tz}>
-                        {tz}
-                      </option>
-                    ))}
-                  </NativeSelect>
+              </CardContent>
+            </Card>
+            <Card id="settings-workspace" className="scroll-mt-24">
+              <CardHeader>
+                <CardTitle>Workspace preferences</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="appName">Application Name</Label>
+                    <Input
+                      id="appName"
+                      value={appName}
+                      onChange={(e) => setAppName(e.target.value)}
+                      maxLength={40}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="themePref">Theme</Label>
+                    <NativeSelect
+                      id="themePref"
+                      value={themePref}
+                      onChange={(e) => setThemePref(e.target.value)}
+                    >
+                      <option value="system">System</option>
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                    </NativeSelect>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <NativeSelect
+                      id="timezone"
+                      value={timezone}
+                      onChange={(e) => setTimezone(e.target.value)}
+                    >
+                      {TIMEZONES.map((tz) => (
+                        <option key={tz} value={tz}>
+                          {tz}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="timeFormat">Time Format</Label>
+                    <NativeSelect
+                      id="timeFormat"
+                      value={timeFormat}
+                      onChange={(e) => setTimeFormat(e.target.value)}
+                    >
+                      <option value="24h">24-hour</option>
+                      <option value="12h">12-hour</option>
+                    </NativeSelect>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="defaultRange">Default Analytics Range</Label>
+                    <NativeSelect
+                      id="defaultRange"
+                      value={defaultRange}
+                      onChange={(e) => setDefaultRange(e.target.value)}
+                    >
+                      <option value="7d">Last 7 days</option>
+                      <option value="30d">Last 30 days</option>
+                      <option value="90d">Last 90 days</option>
+                      <option value="all">All time</option>
+                    </NativeSelect>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="themePref">Theme</Label>
-                  <NativeSelect
-                    id="themePref"
-                    value={themePref}
-                    onChange={(e) => setThemePref(e.target.value)}
-                  >
-                    <option value="system">System</option>
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                  </NativeSelect>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="timeFormat">Time Format</Label>
-                  <NativeSelect
-                    id="timeFormat"
-                    value={timeFormat}
-                    onChange={(e) => setTimeFormat(e.target.value)}
-                  >
-                    <option value="24h">24-hour</option>
-                    <option value="12h">12-hour</option>
-                  </NativeSelect>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="defaultRange">Default Analytics Range</Label>
-                  <NativeSelect
-                    id="defaultRange"
-                    value={defaultRange}
-                    onChange={(e) => setDefaultRange(e.target.value)}
-                  >
-                    <option value="7d">Last 7 days</option>
-                    <option value="30d">Last 30 days</option>
-                    <option value="90d">Last 90 days</option>
-                    <option value="all">All time</option>
-                  </NativeSelect>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <Button type="submit" disabled={saving}>
+                <Button type="submit" disabled={saving} className="w-full sm:w-auto">
                   {saving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    <Loader2 className="size-4 motion-safe:animate-spin" aria-hidden="true" />
                   ) : (
-                    <Save className="h-4 w-4" aria-hidden="true" />
+                    <Save size={16} aria-hidden="true" />
                   )}
-                  Save Settings
+                  {saving ? 'Saving…' : 'Save Settings'}
                 </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Data Portability &amp; Recovery</CardTitle>
-            <CardDescription>
-              Export all your workspace data or import a topic JSON blueprint.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={handleExportFullJson}
-              disabled={exporting}
-            >
-              {exporting ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Download className="h-4 w-4" aria-hidden="true" />
-              )}
-              Export Full Workspace JSON
-            </Button>
-
-            <div className="rounded-lg border border-dashed border-border p-4">
-              <Label htmlFor="topicImportFile" className="mb-2">
-                Import Topic Configuration (JSON)
-              </Label>
-              <label
-                htmlFor="topicImportFile"
-                className="inline-flex min-h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-muted/50 px-3 text-xs font-medium hover:bg-muted"
+              </CardContent>
+            </Card>
+          </form>
+          <Card id="settings-device" className="scroll-mt-24">
+            <CardHeader>
+              <CardTitle>On this device</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <WorkspaceSoundSetting />
+            </CardContent>
+          </Card>
+          <Card id="settings-data" className="scroll-mt-24">
+            <CardHeader>
+              <CardTitle>Backups &amp; imports</CardTitle>
+              <CardDescription>
+                Download your workspace or create a topic from a saved configuration.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleExportFullJson}
+                disabled={exporting}
               >
-                <Upload className="h-4 w-4" aria-hidden="true" />
-                {importing ? 'Importing…' : 'Choose Topic JSON File'}
-              </label>
-              <input
-                id="topicImportFile"
-                type="file"
-                accept="application/json,.json"
-                className="sr-only"
-                disabled={importing}
-                onChange={(e) => void handleImportTopicConfig(e.target.files?.[0])}
-              />
-            </div>
-          </CardContent>
-        </Card>
+                {exporting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                )}
+                Export Full Workspace JSON
+              </Button>
+
+              <div className="rounded-lg border border-dashed border-border p-4">
+                <Label htmlFor="topicImportFile" className="mb-2">
+                  Import Topic Configuration (JSON)
+                </Label>
+                <label
+                  htmlFor="topicImportFile"
+                  className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-border bg-muted/50 px-3 text-xs font-medium hover:bg-muted"
+                >
+                  <Upload className="h-4 w-4" aria-hidden="true" />
+                  {importing ? 'Importing…' : 'Choose Topic JSON File'}
+                </label>
+                <input
+                  id="topicImportFile"
+                  type="file"
+                  accept="application/json,.json"
+                  className="sr-only"
+                  disabled={importing}
+                  onChange={(e) => void handleImportTopicConfig(e.target.files?.[0])}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

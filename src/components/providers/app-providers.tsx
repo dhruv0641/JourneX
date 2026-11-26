@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { OfflineBanner, ToastViewport } from '@/components/shared/state-views';
+import { WorkspaceSoundListener } from '@/components/shared/workspace-sounds';
 import { createClient } from '@/lib/supabase/client';
 import { useUiStore } from '@/stores/ui-store';
 
@@ -112,6 +113,7 @@ export function AppProviders({
   return (
     <QueryClientProvider client={queryClient}>
       <WorkspaceSyncListener userId={userId} />
+      <WorkspaceSoundListener />
       <OfflineBanner />
       {children}
       <ToastViewport />

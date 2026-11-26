@@ -1,0 +1,37 @@
+name: Supabase & App Keep-Alive
+
+on:
+  schedule:
+    # Twice weekly (Monday & Thursday at 09:00 UTC) so Supabase Free Tier stays active (< 7 day threshold)
+    - cron: '0 9 * * 1,4'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping-health:
+    name: Ping NEXORA Health Endpoint
+    runs-on: ubuntu-latest
+    env:
+      APP_HEALTH_URL: ${{ vars.APP_HEALTH_URL }}
+    steps:
+      - name: Check deployment configuration
+        id: check_config
+        run: |
+          if [ -z "$APP_HEALTH_URL" ]; then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "APP_HEALTH_URL repository variable is not set yet. Set it in GitHub Settings -> Secrets and variables -> Actions -> Variables (e.g. https://your-app.vercel.app/api/health)."
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Call /api/health endpoint
+        if: steps.check_config.outputs.configured == 'true'
+        run: |
+          response=$(curl --fail --silent --show-error --max-time 30 "$APP_HEALTH_URL")
+          echo "Health response: $response"
+          if ! echo "$response" | grep -q '"database":"connected"'; then
+            echo "Database health check did not report connected!"
+            exit 1
+          fi

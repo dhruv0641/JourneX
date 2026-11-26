@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Layers, Loader2 } from 'lucide-react';
+import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/client';
@@ -144,12 +144,12 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
   const headings: Record<AuthMode, { title: string; subtitle: string; submitLabel: string }> = {
     login: {
       title: 'Sign in to NEXORA',
-      subtitle: 'Access your topics, dashboards, timers, and saved configurations.',
+      subtitle: 'Open your topics and pick up where you left off.',
       submitLabel: 'Sign in',
     },
     register: {
       title: 'Create your workspace',
-      subtitle: 'Start organizing projects, study plans, finances, and custom workflows.',
+      subtitle: 'Create an account to save your first topic.',
       submitLabel: 'Create account',
     },
     forgot: {
@@ -168,20 +168,10 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
   const errors = form.formState.errors;
 
   return (
-    <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-sm sm:p-8">
-      <div className="mb-6 flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <Layers className="h-4 w-4" aria-hidden="true" />
-        </span>
-        <div>
-          <span className="text-sm font-semibold tracking-tight" translate="no">
-            NEXORA
-          </span>
-          <p className="text-xs text-muted-foreground">Personal Operating System</p>
-        </div>
-      </div>
-
-      <h1 className="text-xl font-bold tracking-tight text-foreground">{copy.title}</h1>
+    <div className="mx-auto w-full max-w-md">
+      <h1 className="text-balance font-serif text-[clamp(2rem,3.5vw,2.9rem)] leading-tight tracking-tight text-foreground">
+        {copy.title}
+      </h1>
       <p className="mt-1.5 text-sm text-muted-foreground">{copy.subtitle}</p>
 
       {serverError ? (
@@ -214,12 +204,16 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               id="fullName"
               type="text"
               autoComplete="name"
-              placeholder="Alex Rivera…"
-              className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Alex Rivera"
+              className="min-h-12 w-full rounded-lg border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-invalid={Boolean(errors.fullName)}
+              aria-describedby={errors.fullName ? 'fullName-error' : undefined}
               {...form.register('fullName')}
             />
             {errors.fullName ? (
-              <p className="text-xs text-destructive">{String(errors.fullName.message)}</p>
+              <p id="fullName-error" className="text-sm text-destructive">
+                {String(errors.fullName.message)}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -235,12 +229,16 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               inputMode="email"
               autoComplete="email"
               spellCheck={false}
-              placeholder="you@domain.com…"
-              className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="you@example.com"
+              className="min-h-12 w-full rounded-lg border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? 'email-error' : undefined}
               {...form.register('email')}
             />
             {errors.email ? (
-              <p className="text-xs text-destructive">{String(errors.email.message)}</p>
+              <p id="email-error" className="text-sm text-destructive">
+                {String(errors.email.message)}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -254,7 +252,7 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               {mode === 'login' ? (
                 <Link
                   href="/forgot-password"
-                  className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Forgot password?
                 </Link>
@@ -265,15 +263,17 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                placeholder="At least 8 characters…"
-                className="min-h-11 w-full rounded-md border border-input bg-background pl-3 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                placeholder={mode === 'login' ? undefined : 'At least 8 characters'}
+                className="min-h-12 w-full rounded-lg border border-input bg-background pl-3 pr-14 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-invalid={Boolean(errors.password)}
+                aria-describedby={errors.password ? 'password-error' : undefined}
                 {...form.register('password')}
               />
               <button
                 type="button"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute right-0.5 top-0.5 flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {showPassword ? (
                   <EyeOff className="h-4 w-4" aria-hidden="true" />
@@ -283,7 +283,9 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               </button>
             </div>
             {errors.password ? (
-              <p className="text-xs text-destructive">{String(errors.password.message)}</p>
+              <p id="password-error" className="text-sm text-destructive">
+                {String(errors.password.message)}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -297,12 +299,16 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               id="confirmPassword"
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
-              placeholder="Re-enter password…"
-              className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              placeholder="Re-enter password"
+              className="min-h-12 w-full rounded-lg border border-input bg-background px-3 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-invalid={Boolean(errors.confirmPassword)}
+              aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
               {...form.register('confirmPassword')}
             />
             {errors.confirmPassword ? (
-              <p className="text-xs text-destructive">{String(errors.confirmPassword.message)}</p>
+              <p id="confirmPassword-error" className="text-sm text-destructive">
+                {String(errors.confirmPassword.message)}
+              </p>
             ) : null}
           </div>
         ) : null}
@@ -310,7 +316,7 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="inline-flex group min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {isSubmitting ? (
             <>
@@ -318,7 +324,13 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
               Processing…
             </>
           ) : (
-            copy.submitLabel
+            <>
+              {copy.submitLabel}
+              <ArrowRight
+                className="h-4 w-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-1"
+                aria-hidden="true"
+              />
+            </>
           )}
         </button>
       </form>
@@ -327,19 +339,28 @@ export function AuthCard({ mode }: { mode: AuthMode }) {
         {mode === 'login' ? (
           <>
             New to NEXORA?{' '}
-            <Link href="/register" className="font-medium text-primary hover:underline">
+            <Link
+              href="/register"
+              className="inline-flex min-h-11 items-center rounded-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            >
               Create an account
             </Link>
           </>
         ) : mode === 'register' ? (
           <>
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-primary hover:underline">
+            <Link
+              href="/login"
+              className="inline-flex min-h-11 items-center rounded-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            >
               Sign in
             </Link>
           </>
         ) : (
-          <Link href="/login" className="font-medium text-primary hover:underline">
+          <Link
+            href="/login"
+            className="inline-flex min-h-11 items-center rounded-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+          >
             Back to sign in
           </Link>
         )}
