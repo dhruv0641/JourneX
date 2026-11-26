@@ -1,0 +1,9 @@
+minimumReleaseAgeExclude:
+  - '@vitest/spy@5.1.2'
+  - lucide-react@1.81.0
+  - vitest@5.1.2
+allowBuilds:
+  esbuild: true
+  sharp: true
+  '@tailwindcss/oxide': true
+  unrs-resolver: true
