@@ -20,6 +20,7 @@ import {
   User,
 } from 'lucide-react';
 import { FocusTimer } from '@/components/layout/focus-timer';
+import { WorkspaceContext } from '@/components/providers/workspace-context';
 import { WorkspaceNavigation } from '@/components/layout/workspace-navigation';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { ThemeToggle } from '@/components/shared/theme-toggle';
@@ -147,6 +148,7 @@ export function AppShell({
       <div className="p-3">
         <Link
           href="/topics/new"
+          prefetch={false}
           onClick={() => setMobileSheetOpen(false)}
           className={cn(
             'inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -193,6 +195,7 @@ export function AppShell({
                   <li key={topic.id}>
                     <Link
                       href={`/topics/${topic.slug}`}
+                      prefetch={false}
                       onClick={() => setMobileSheetOpen(false)}
                       className={cn(
                         'flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -221,6 +224,7 @@ export function AppShell({
             <Link
               key={topic.id}
               href={`/topics/${topic.slug}`}
+              prefetch={false}
               title={topic.name}
               className="mx-auto flex h-10 w-10 items-center justify-center rounded-md hover:bg-muted"
             >
@@ -453,7 +457,7 @@ export function AppShell({
             className="min-w-0 flex-1 px-4 pt-5 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-7 lg:px-9 lg:py-8"
           >
             <div key={pathname} className="workspace-route mx-auto min-w-0 max-w-6xl">
-              {children}
+              <WorkspaceContext.Provider value={bootstrap}>{children}</WorkspaceContext.Provider>
             </div>
           </main>
         </div>

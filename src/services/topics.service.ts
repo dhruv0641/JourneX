@@ -104,66 +104,47 @@ export async function fetchTopicDetailBySlug(
   userId: string,
   slug: string,
 ): Promise<TopicDetailBundle | null> {
-  const { data: topic, error } = await supabase
+  const { data, error } = await supabase
     .from('topics')
-    .select('*')
+    .select(
+      '*, topic_modules(*, module_fields(*), calculator_definitions(*, calculator_versions(*))), module_views(*), dashboard_widgets(*)',
+    )
     .eq('user_id', userId)
     .eq('slug', slug)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!topic) return null;
+  if (!data) return null;
 
-  const [modulesRes, fieldsRes, viewsRes, widgetsRes, calcsRes, calcVersRes] = await Promise.all([
-    supabase
-      .from('topic_modules')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('module_fields')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .eq('is_archived', false)
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('module_views')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('dashboard_widgets')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .eq('scope', 'topic')
-      .order('sort_order', { ascending: true }),
-    supabase
-      .from('calculator_definitions')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .eq('is_archived', false),
-    supabase
-      .from('calculator_versions')
-      .select('*')
-      .eq('topic_id', topic.id)
-      .eq('user_id', userId)
-      .order('version_number', { ascending: false }),
-  ]);
+  const { topic_modules, module_views, dashboard_widgets, ...topic } = data;
+  const modules = topic_modules.map(
+    ({ module_fields: _moduleFields, calculator_definitions: _calculatorDefinitions, ...module }) =>
+      module,
+  );
+  const fields = topic_modules
+    .flatMap((module) => module.module_fields)
+    .filter((field) => !field.is_archived)
+    .sort((a, b) => a.sort_order - b.sort_order);
+  const calculators = topic_modules
+    .flatMap((module) => module.calculator_definitions)
+    .filter((calculator) => !calculator.is_archived)
+    .map(({ calculator_versions: _calculatorVersions, ...calculator }) => calculator);
+  const calculatorVersions = topic_modules
+    .flatMap((module) => module.calculator_definitions)
+    .flatMap((calculator) => calculator.calculator_versions)
+    .sort((a, b) => b.version_number - a.version_number);
 
   return {
     topic,
-    modules: modulesRes.data ?? [],
-    fields: fieldsRes.data ?? [],
-    views: viewsRes.data ?? [],
-    widgets: widgetsRes.data ?? [],
-    calculators: calcsRes.data ?? [],
-    calculatorVersions: calcVersRes.data ?? [],
+    modules: modules.sort((a, b) => a.sort_order - b.sort_order),
+    fields,
+    views: module_views.sort((a, b) => a.sort_order - b.sort_order),
+    widgets: dashboard_widgets
+      .filter((widget) => widget.scope === 'topic')
+      .sort((a, b) => a.sort_order - b.sort_order),
+    calculators,
+    calculatorVersions,
   };
 }
 
@@ -171,7 +152,11 @@ export async function createTopicAtomic(
   supabase: SupabaseClient<Database>,
   payload: CreateTopicPayload,
   idempotencyKey?: string,
-): Promise<{ topic: TopicRow; modules: Array<{ id: string; module_key: string; feature_key: string }>; idempotent_replay: boolean }> {
+): Promise<{
+  topic: TopicRow;
+  modules: Array<{ id: string; module_key: string; feature_key: string }>;
+  idempotent_replay: boolean;
+}> {
   const { data, error } = await supabase.rpc('create_topic_atomic', {
     p_payload: payload as unknown as Json,
     p_idempotency_key: idempotencyKey,
@@ -207,7 +192,17 @@ export async function updateTopicWithVersion(
   patch: Partial<
     Pick<
       TopicRow,
-      'name' | 'description' | 'purpose' | 'category' | 'icon' | 'accent_color' | 'is_pinned' | 'is_favorite' | 'status' | 'archived_at' | 'settings'
+      | 'name'
+      | 'description'
+      | 'purpose'
+      | 'category'
+      | 'icon'
+      | 'accent_color'
+      | 'is_pinned'
+      | 'is_favorite'
+      | 'status'
+      | 'archived_at'
+      | 'settings'
     >
   >,
   expectedVersion: number,
@@ -257,7 +252,9 @@ export async function updateTopicModuleWithVersion(
   supabase: SupabaseClient<Database>,
   userId: string,
   moduleId: string,
-  patch: Partial<Pick<TopicModuleRow, 'name' | 'description' | 'is_enabled' | 'sort_order' | 'config'>>,
+  patch: Partial<
+    Pick<TopicModuleRow, 'name' | 'description' | 'is_enabled' | 'sort_order' | 'config'>
+  >,
   expectedVersion: number,
 ): Promise<TopicModuleRow> {
   const { data, error } = await supabase
@@ -390,7 +387,13 @@ export async function saveTopicViews(
   supabase: SupabaseClient<Database>,
   userId: string,
   topicId: string,
-  views: Array<{ id?: string; view_type: ViewType; name: string; sort_order: number; is_default: boolean }>,
+  views: Array<{
+    id?: string;
+    view_type: ViewType;
+    name: string;
+    sort_order: number;
+    is_default: boolean;
+  }>,
 ): Promise<ModuleViewRow[]> {
   // Replace non-destructive view metadata cleanly
   const { error: delErr } = await supabase

@@ -53,7 +53,7 @@ export function TopicWorkspaceClient({
   userId: string;
   timezone: string;
   initialBundle: TopicDetailBundle;
-  initialAnalytics: TopicAnalyticsSummary;
+  initialAnalytics?: TopicAnalyticsSummary;
   initialTab?: string;
 }) {
   const { data: bundle = initialBundle, refetch: refetchBundle } = useQuery({
@@ -65,7 +65,11 @@ export function TopicWorkspaceClient({
     initialData: initialBundle,
   });
 
-  const { data: analytics = initialAnalytics } = useQuery({
+  const {
+    data: analytics,
+    isError: analyticsError,
+    refetch: refetchAnalytics,
+  } = useQuery({
     queryKey: ['topic-analytics', bundle.topic.id, timezone],
     queryFn: () => fetchTopicAnalyticsSummary(createClient(), bundle.topic.id, 30, timezone),
     initialData: initialAnalytics,
@@ -93,12 +97,13 @@ export function TopicWorkspaceClient({
     window.history.pushState(null, '', url);
   }
 
-  const chartSeries = analytics.daily_series.map((d) => ({
-    day: d.day.slice(5),
-    minutes: Number(d.minutes_tracked),
-    tasks: Number(d.tasks_completed),
-    records: Number(d.records_logged),
-  }));
+  const chartSeries =
+    analytics?.daily_series.map((d) => ({
+      day: d.day.slice(5),
+      minutes: Number(d.minutes_tracked),
+      tasks: Number(d.tasks_completed),
+      records: Number(d.records_logged),
+    })) ?? [];
 
   function renderModule(mod: TopicModuleRow) {
     const modFields = bundle.fields.filter((f) => f.module_id === mod.id);
@@ -335,65 +340,78 @@ export function TopicWorkspaceClient({
             </section>
           )}
           {/* Real KPI Row */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Tasks Completed</p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {analytics.summary.completed_tasks} / {analytics.summary.total_tasks}
-                  </p>
-                </div>
-                <CheckSquare className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">30-Day Focus Time</p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {formatDurationSeconds(analytics.summary.total_tracked_seconds)}
-                  </p>
-                </div>
-                <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Entries &amp; Logs</p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {analytics.summary.custom_records_count +
-                      analytics.summary.journal_entries_count}
-                  </p>
-                </div>
-                <FileText className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Goal Progress</p>
-                  <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
-                    {analytics.summary.avg_goal_progress_pct}%
-                  </p>
-                </div>
-                <Target className="h-5 w-5 text-primary" aria-hidden="true" />
-              </CardContent>
-            </Card>
-          </div>
+          {analytics ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Tasks Completed</p>
+                      <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
+                        {analytics.summary.completed_tasks} / {analytics.summary.total_tasks}
+                      </p>
+                    </div>
+                    <CheckSquare className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">30-Day Focus Time</p>
+                      <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
+                        {formatDurationSeconds(analytics.summary.total_tracked_seconds)}
+                      </p>
+                    </div>
+                    <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Entries &amp; Logs</p>
+                      <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
+                        {analytics.summary.custom_records_count +
+                          analytics.summary.journal_entries_count}
+                      </p>
+                    </div>
+                    <FileText className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Goal Progress</p>
+                      <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
+                        {analytics.summary.avg_goal_progress_pct}%
+                      </p>
+                    </div>
+                    <Target className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </CardContent>
+                </Card>
+              </div>
 
-          <AnalyticsChartCard
-            title={`${bundle.topic.name} — 30-Day Activity & Study Trend`}
-            subtitle="Focus time, completed tasks, and entries by day"
-            data={chartSeries}
-            xKey="day"
-            series={[
-              { key: 'minutes', label: 'Minutes Tracked' },
-              { key: 'tasks', label: 'Tasks Completed' },
-              { key: 'records', label: 'Records Logged' },
-            ]}
-          />
+              <AnalyticsChartCard
+                title={`${bundle.topic.name} — 30-Day Activity & Study Trend`}
+                subtitle="Focus time, completed tasks, and entries by day"
+                data={chartSeries}
+                xKey="day"
+                series={[
+                  { key: 'minutes', label: 'Minutes Tracked' },
+                  { key: 'tasks', label: 'Tasks Completed' },
+                  { key: 'records', label: 'Records Logged' },
+                ]}
+              />
+            </>
+          ) : analyticsError ? (
+            <div role="alert" className="flex items-center gap-3">
+              <span>Analytics couldn’t load.</span>
+              <Button variant="outline" onClick={() => void refetchAnalytics()}>
+                Try again
+              </Button>
+            </div>
+          ) : (
+            <Skeleton className="h-64 w-full" />
+          )}
         </TabsContent>
 
         {enabledModules.map((mod) => (

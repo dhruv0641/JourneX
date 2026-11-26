@@ -42,6 +42,7 @@ export function WorkspaceNavigation({
             <Link
               key={href}
               href={href}
+              prefetch={false}
               aria-label={label}
               aria-current={active ? 'page' : undefined}
               title={collapsed ? label : undefined}

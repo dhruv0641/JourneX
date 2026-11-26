@@ -24,7 +24,7 @@ export function ActivityFeedClient({
   userId: string;
   timezone: string;
   topics: TopicRow[];
-  initialLogs: ActivityLogRow[];
+  initialLogs?: ActivityLogRow[];
 }) {
   const queryClient = useQueryClient();
   const pushToast = useUiStore((s) => s.pushToast);

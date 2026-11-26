@@ -267,6 +267,7 @@ export function TopicsDirectoryClient({
         </div>
         <Link
           href="/topics/new"
+          prefetch={false}
           className="inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:opacity-95"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -353,6 +354,7 @@ export function TopicsDirectoryClient({
             ) : (
               <Link
                 href="/topics/new"
+                prefetch={false}
                 className="inline-flex min-h-10 items-center gap-1.5 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
@@ -369,6 +371,7 @@ export function TopicsDirectoryClient({
                 <div className="flex items-start justify-between gap-2">
                   <Link
                     href={`/topics/${topic.slug}`}
+                    prefetch={false}
                     className="flex min-w-0 items-center gap-3 hover:underline"
                   >
                     <span
@@ -471,6 +474,7 @@ export function TopicsDirectoryClient({
                   </div>
                   <Link
                     href={`/topics/${topic.slug}`}
+                    prefetch={false}
                     className="inline-flex min-h-9 items-center rounded-md bg-muted px-3 text-xs font-medium text-foreground hover:bg-muted/80"
                   >
                     Open

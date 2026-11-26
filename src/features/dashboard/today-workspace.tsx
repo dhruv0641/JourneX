@@ -74,7 +74,9 @@ export function TodayWorkspace({
   const deadlines = summary.upcoming_deadlines;
   const localDate = summary.daily_series.at(-1)?.day.slice(0, 10) ?? initialDate;
   const dateLabel = formatDateInZone(localDate + 'T12:00:00Z', 'UTC', {
-    weekday: 'long', month: 'long', day: 'numeric',
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
   });
   return (
     <div className="today-workspace">
@@ -116,7 +118,12 @@ export function TodayWorkspace({
           </div>
           <div className="desk-list">
             {topics.slice(0, 5).map((topic) => (
-              <Link key={topic.id} className="desk-entry" href={`/topics/${topic.slug}`}>
+              <Link
+                key={topic.id}
+                className="desk-entry"
+                href={`/topics/${topic.slug}`}
+                prefetch={false}
+              >
                 <span className="desk-icon" style={{ borderInlineStartColor: topic.accent_color }}>
                   <TopicIcon name={topic.icon} className="size-5" />
                 </span>
@@ -160,7 +167,12 @@ export function TodayWorkspace({
                 </>
               );
               return topic ? (
-                <Link key={item.id} className="desk-entry" href={`/topics/${topic.slug}?tab=tasks`}>
+                <Link
+                  key={item.id}
+                  className="desk-entry"
+                  href={`/topics/${topic.slug}?tab=tasks`}
+                  prefetch={false}
+                >
                   {row}
                 </Link>
               ) : (

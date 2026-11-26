@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   DndContext,
   closestCenter,
@@ -19,7 +20,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowDown,
   ArrowUp,
@@ -56,7 +57,19 @@ import {
 import { useUiStore } from '@/stores/ui-store';
 import type { DashboardWidgetRow, GlobalDashboardSummary, TopicSummaryItem } from '@/types/domain';
 
-import { AnalyticsChartCard } from '@/components/charts/analytics-charts';
+const AnalyticsChartCard = dynamic(
+  () => import('@/components/charts/analytics-charts').then((module) => module.AnalyticsChartCard),
+  {
+    loading: () => (
+      <div
+        className="min-h-64 rounded-2xl border border-border bg-card p-5 text-sm text-muted-foreground"
+        role="status"
+      >
+        Loading chart…
+      </div>
+    ),
+  },
+);
 
 interface WidgetPref {
   id: string;
@@ -307,6 +320,7 @@ export function GlobalDashboardClient({
   initialSummary: GlobalDashboardSummary;
   initialWidgets: DashboardWidgetRow[];
 }) {
+  const queryClient = useQueryClient();
   const pushToast = useUiStore((s) => s.pushToast);
   const [days, setDays] = useState(initialDays);
   const [topicFilter, setTopicFilter] = useState('');
@@ -376,6 +390,7 @@ export function GlobalDashboardClient({
           layout: { colSpan: 1, rowSpan: 1 },
         })),
       );
+      await queryClient.invalidateQueries({ queryKey: ['dashboard-widgets', userId] });
       pushToast({ kind: 'success', title: 'Dashboard layout saved' });
     } catch {
       pushToast({ kind: 'error', title: 'Failed saving widget preferences' });
